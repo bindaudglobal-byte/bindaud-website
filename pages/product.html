@@ -21,6 +21,8 @@
     <link rel="stylesheet" href="../css/responsive.css">
     <link rel="stylesheet" href="../css/animation.css">
     <link rel="stylesheet" href="../css/chatbot.css">
+<link rel="stylesheet" href="../css/cursor.css">
+<link rel="stylesheet" href="../css/interactions.css">
 </head>
 
 <body class="bd-body">
@@ -75,6 +77,29 @@
                         <div class="gallery-hero-image">
                             <img src="../assets/products/product2.png" alt="Main view of Urban Odyssey Cardigan" id="main-product-image">
                         </div>
+                            <!-- Vertical action buttons (trash, save, wishlist) -->
+                            <div class="vertical-actions" role="group" aria-label="Product actions">
+                                <button class="btn-icon" aria-label="Remove item">
+                                    <span class="icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+                                    </span>
+                                    <span class="action-label">Remove</span>
+                                </button>
+
+                                <button class="btn-icon" aria-label="Save for later">
+                                    <span class="icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 10V3H3v11a4 4 0 004 4h8a4 4 0 004-4V10z"></path></svg>
+                                    </span>
+                                    <span class="action-label">Save</span>
+                                </button>
+
+                                <button class="btn-icon" aria-label="Add to wishlist">
+                                    <span class="icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.6-7.6 1-1a5.5 5.5 0 000-7.8z"></path></svg>
+                                    </span>
+                                    <span class="action-label">Wishlist</span>
+                                </button>
+                            </div>
                         <div class="gallery-thumbnails">
                             <button class="thumbnail-item active" data-image="../assets/products/product2.png" aria-label="View product image 1">
                                 <img src="../assets/products/product2.png" alt="Thumbnail of Urban Odyssey Cardigan">
@@ -300,6 +325,8 @@
 
     <script src="../js/config.js"></script>
     <script type="module" src="../js/app.js"></script>
+<script src="../js/config.js"></script>
+<script type="module" src="../js/app.js"></script>
 </body>
 
 </html>

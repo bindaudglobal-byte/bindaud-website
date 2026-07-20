@@ -1,0 +1,138 @@
+:root {
+  --cursor-ring-size: 42px;
+  --cursor-dot-size: 8px;
+  --cursor-glow-size: 180px;
+  --cursor-color: rgba(195, 156, 94, 0.95);
+  --cursor-stroke: rgba(33, 72, 107, 0.7);
+  --cursor-glow: rgba(33, 72, 107, 0.16);
+}
+
+html.has-custom-cursor {
+  cursor: none;
+}
+
+html.has-custom-cursor * {
+  cursor: none !important;
+}
+
+.cursor-dot,
+.cursor-ring,
+.cursor-glow {
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-radius: 999px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 2147483647;
+  will-change: transform, opacity;
+}
+
+.cursor-dot {
+  width: var(--cursor-dot-size);
+  height: var(--cursor-dot-size);
+  background: var(--cursor-color);
+  box-shadow: 0 0 20px rgba(195, 156, 94, 0.5);
+  mix-blend-mode: screen;
+}
+
+.cursor-ring {
+  width: var(--cursor-ring-size);
+  height: var(--cursor-ring-size);
+  border: 1px solid var(--cursor-stroke);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 22px rgba(255, 255, 255, 0.08), 0 0 30px rgba(33, 72, 107, 0.2);
+  opacity: 0.78;
+  transition: width 220ms cubic-bezier(0.2, 0.8, 0.2, 1), height 220ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 220ms ease, opacity 220ms ease;
+}
+
+.cursor-glow {
+  width: var(--cursor-glow-size);
+  height: var(--cursor-glow-size);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, rgba(33, 72, 107, 0.12) 36%, transparent 72%);
+  filter: blur(24px);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+body.cursor-disabled .cursor-dot,
+body.cursor-disabled .cursor-ring,
+body.cursor-disabled .cursor-glow {
+  display: none !important;
+}
+
+body.cursor-hover-button .cursor-ring {
+  width: 58px;
+  height: 58px;
+  border-color: rgba(195, 156, 94, 0.9);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.16), 0 0 36px rgba(195, 156, 94, 0.16);
+}
+
+body.cursor-hover-nav .cursor-ring {
+  width: 62px;
+  height: 62px;
+  border-color: rgba(33, 72, 107, 0.95);
+}
+
+body.cursor-hover-product .cursor-ring {
+  width: 70px;
+  height: 70px;
+  border-color: rgba(195, 156, 94, 0.95);
+}
+
+body.cursor-hover-image .cursor-ring {
+  width: 74px;
+  height: 74px;
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+body.cursor-hover-cart .cursor-ring {
+  width: 64px;
+  height: 64px;
+  border-color: rgba(195, 156, 94, 0.95);
+}
+
+body.cursor-hover-wishlist .cursor-ring {
+  width: 64px;
+  height: 64px;
+  border-color: rgba(195, 156, 94, 0.95);
+}
+
+body.cursor-hover-social .cursor-ring {
+  width: 60px;
+  height: 60px;
+  border-color: rgba(255, 255, 255, 0.95);
+}
+
+body.cursor-hover-form .cursor-ring {
+  width: 54px;
+  height: 54px;
+  border-color: rgba(195, 156, 94, 0.95);
+}
+
+body.cursor-hover-logo .cursor-ring {
+  width: 66px;
+  height: 66px;
+  border-color: rgba(33, 72, 107, 0.95);
+}
+
+body.cursor-hover-video .cursor-ring {
+  width: 70px;
+  height: 70px;
+  border-color: rgba(195, 156, 94, 0.95);
+}
+
+body.cursor-hover-admin .cursor-ring {
+  width: 56px;
+  height: 56px;
+  border-color: rgba(255, 255, 255, 0.95);
+}
+
+body.cursor-active .cursor-glow {
+  opacity: 0.55;
+}
+
+body.cursor-active .cursor-dot {
+  transform: translate(-50%, -50%) scale(1.1);
+}

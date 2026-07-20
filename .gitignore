@@ -3,3 +3,9 @@
 .vercel/
 node_modules/
 *.log
+
+# Ignore locally generated image assets that hit Windows path-length limits
+assets/images/Premium luxury T-shirt back graphic for BIN DAUD, elegant vertical composition, large refined BIN DAUD wordmark in sophisticated serif font, vertical Arabic calligraphy element running down center, thin elegant lin.jpg
+assets/images/Premium streetwear T-shirt graphic for BIN DAUD, bold illustration style, large statement typography STAY RARE in distressed bold sans-serif font navy blue and white, central illustrated element of elegant eagl (1).jpg
+assets/images/Premium streetwear T-shirt graphic for BIN DAUD, bold illustration style, large statement typography STAY RARE in distressed bold sans-serif font navy blue and white, central illustrated element of elegant eagl (2).jpg
+assets/images/Premium streetwear T-shirt graphic for BIN DAUD, bold illustration style, large statement typography STAY RARE in distressed bold sans-serif font navy blue and white, central illustrated element of elegant eagle or.jpg

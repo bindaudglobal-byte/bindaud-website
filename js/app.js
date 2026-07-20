@@ -3,6 +3,8 @@ import { initSiteNavigation } from './site-navigation.js';
 import { initChatbot } from './chatbot.js';
 import { initProductReviews } from './reviews.js';
 import { initOrderTracking } from './orderTracking.js';
+import { initCursorSystem } from './cursor.js';
+import { initPremiumInteractions } from './interactions.js';
 import { requestFrame } from './performance.js';
 
 if (typeof window !== 'undefined') {
@@ -11,6 +13,8 @@ if (typeof window !== 'undefined') {
     window.__BINDAUD_APP_STARTED = true;
 
     requestFrame(() => {
+      initCursorSystem();
+      initPremiumInteractions();
       initSiteNavigation();
       initSite();
       initChatbot();
