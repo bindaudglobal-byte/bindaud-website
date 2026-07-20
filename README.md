@@ -10,25 +10,47 @@
 
 **What is BIN DAUD?**
 
-BIN DAUD is a **production-quality luxury streetwear eCommerce website** built with:
-- Plain HTML5, CSS3, and ES6+ JavaScript (no frameworks)
-- localStorage for state management (cart, orders, admin data)
+BIN DAUD is a **production-ready luxury streetwear eCommerce website** built with:
+- Plain HTML5, CSS3, and ES6+ JavaScript for the storefront
+- A Node.js/Express backend with MongoDB for persistent product, order, and admin data
+- Cloudinary for product image hosting
 - WhatsApp integration for checkout/ordering
-- Frontend-only admin dashboard (no backend required)
+- A backend-powered admin dashboard for creating and managing products
 
 **Key Metrics:**
-- 6 core products (extensible via admin)
+- 6+ core products (extensible via admin)
 - 7 collection categories
 - Full cart, checkout, and order management
 - Admin system with product, order, and settings management
 - Pakistan-focused (PKR currency, local delivery zones)
 
-**Current Status:** Fully functional MVP with admin dashboard plus a premium floating AI assistant
+**Current Status:** Production-ready storefront with MongoDB-backed persistence and Vercel-compatible API routing
 
 **Target Users:**
 1. **Customers:** Browse, add to cart, checkout via WhatsApp
 2. **Admins:** Manage products, orders, delivery zones, coupons, and website settings
-3. **Future Backend:** Structure supports easy migration to Node.js/Supabase/Firebase
+3. **Deployments:** Local development and Vercel production hosting
+
+### Current deployment model
+- The public storefront is served from the static frontend files.
+- Product CRUD and admin operations are handled by the backend API at `/api/*`.
+- For Vercel, the API is exposed through [vercel.json](vercel.json) and [api/index.js](api/index.js).
+- Product persistence is backed by MongoDB rather than localStorage.
+
+### Required production environment variables
+Set these in Vercel Project Settings → Environment Variables:
+- `MONGODB_URI`
+- `JWT_SECRET`
+- `CLIENT_URL` (your Vercel domain, for example `https://your-app.vercel.app`)
+- `ADMIN_TOKEN` (recommended for admin API access)
+
+Optional but useful:
+- `SESSION_SECRET` / `COOKIE_SECRET`
+- `RATE_LIMIT_MAX`
+- `RATE_LIMIT_WINDOW_MS`
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
 
 ---
 

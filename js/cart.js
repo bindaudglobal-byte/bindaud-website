@@ -963,7 +963,7 @@ export const initCheckoutPage = () => {
     if (preview) preview.innerHTML = buildCheckoutPreviewMarkup(customerData, cart, totals);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!form) return;
 
@@ -983,20 +983,52 @@ export const initCheckoutPage = () => {
     const orderPayload = {
       customerName: customerData.fullName,
       phone: customerData.phone,
+      email: customerData.email,
       address: customerData.address,
       city: customerData.city,
+      postalCode: customerData.postalCode,
+      province: customerData.province,
+      notes: customerData.notes,
       products: cart.map((item) => ({
         name: item.name,
         quantity: item.quantity,
         price: item.price,
-        code: item.code
+        code: item.code,
+        size: item.size,
+        color: item.color
       })),
+      subtotal: totals.subtotal,
+      discount: totals.discountAmount,
+      shipping: totals.shipping,
+      tax: totals.tax,
       total: totals.grandTotal,
       paymentMethod: customerData.paymentMethod
     };
 
-    createOrder(orderPayload);
-    queueOrderEmail(customerData, orderPayload, totals);
+    // Save order locally
+    const localOrder = createOrder(orderPayload);
+    await queueOrderEmail(customerData, orderPayload, totals);
+
+    // Try to save order to backend API
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...orderPayload,
+          status: 'Pending'
+        })
+      });
+
+      if (response.ok) {
+        const backendOrder = await response.json();
+        showToast('Order saved successfully! Sending confirmation email...');
+      }
+    } catch (apiError) {
+      console.warn('Backend order save failed, order saved locally:', apiError.message);
+    }
+
+    // Send WhatsApp message
     const whatsappMessage = buildWhatsAppMessage(customerData, cart, totals);
     const whatsappUrl = `https://wa.me/923288582902?text=${encodeURIComponent(whatsappMessage)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');

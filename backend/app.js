@@ -6,12 +6,15 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const errorHandler = require('./middleware/errorHandler');
+const sessionMiddleware = require('./middleware/session');
+const { getClientUrl, getRateLimitMax, getRateLimitWindowMs } = require('./config/env');
 
 const app = express();
 
+app.set('trust proxy', 1);
 app.use(helmet());
 const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:3000',
+  getClientUrl(),
   'http://127.0.0.1:8080',
   'http://localhost:8080',
 ];
@@ -33,8 +36,8 @@ app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 const limiter = rateLimit({
-  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
-  max: Number(process.env.RATE_LIMIT_MAX || 200),
+  windowMs: getRateLimitWindowMs(),
+  max: getRateLimitMax(),
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -43,6 +46,7 @@ const limiter = rateLimit({
   },
 });
 app.use('/api', limiter);
+app.use(sessionMiddleware);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Customer = require('../models/Customer');
 const { sendPasswordReset, sendContactForm } = require('../services/emailService');
+const { getJwtSecret } = require('../config/env');
 
 const register = async (req, res, next) => {
   try {
@@ -18,7 +19,7 @@ const register = async (req, res, next) => {
       address: req.body.address || {},
     });
 
-    const token = jwt.sign({ id: customer._id }, process.env.JWT_SECRET || 'super-secret', {
+    const token = jwt.sign({ id: customer._id }, getJwtSecret(), {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
 
@@ -37,7 +38,7 @@ const login = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: customer._id }, process.env.JWT_SECRET || 'super-secret', {
+    const token = jwt.sign({ id: customer._id }, getJwtSecret(), {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
 

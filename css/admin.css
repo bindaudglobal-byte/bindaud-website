@@ -401,6 +401,28 @@
   }
 }
 
+/* Admin Toolbar Row */
+.admin-toolbar-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.admin-toolbar-row input,
+.admin-toolbar-row select {
+  flex: 1 1 auto;
+  min-width: 120px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.admin-toolbar-row .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* Data management buttons */
 #export-data-btn,
 #import-data-btn {
@@ -426,4 +448,136 @@
   background: #ffebee;
   color: #c62828;
   border: 1px solid #f44336;
+}
+
+/* Mobile: Tablet and below */
+@media screen and (max-width: 768px) {
+  .admin-toolbar-row {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .admin-toolbar-row input,
+  .admin-toolbar-row select,
+  .admin-toolbar-row .btn {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: auto;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.5rem;
+  }
+
+  .admin-toolbar-row input:first-child {
+    flex-basis: 100%;
+  }
+
+  .admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table {
+    min-width: 100%;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Mobile: Small devices */
+@media screen and (max-width: 480px) {
+  .admin-toolbar-row {
+    gap: 0.4rem;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+  }
+
+  .admin-toolbar-row input,
+  .admin-toolbar-row select,
+  .admin-toolbar-row .btn {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 100%;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+  }
+
+  .admin-toolbar-row input:first-child {
+    flex-basis: 100%;
+  }
+
+  .admin-toolbar {
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-toolbar button,
+  .admin-toolbar a {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    min-height: 36px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .admin-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-card {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .admin-card h3 {
+    font-size: 1.5rem;
+  }
+
+  .admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem;
+  }
+
+  .admin-table {
+    min-width: 600px;
+    width: 100%;
+  }
+
+  .admin-table th {
+    padding: 0.4rem;
+    font-size: 0.75rem;
+  }
+
+  .admin-table td {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .admin-inline-actions {
+    min-width: 120px;
+  }
+
+  .admin-inline-actions select {
+    padding: 0.4rem;
+    font-size: 0.75rem;
+  }
+
+  .admin-product-card {
+    grid-template-columns: 1fr;
+  }
+
+  .product-image-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+
+  .admin-form-grid {
+    gap: 0.75rem;
+  }
 }

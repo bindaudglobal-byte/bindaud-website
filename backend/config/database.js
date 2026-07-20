@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
+const { getMongoUri } = require('./env');
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/bindaud';
+  const uri = getMongoUri();
 
   await mongoose.connect(uri, {
     autoIndex: true,

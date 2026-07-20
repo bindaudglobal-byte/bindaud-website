@@ -482,6 +482,19 @@ export const getOrdersAsync = async () => {
     }
   }
 
+  // Try to fetch from backend API
+  try {
+    const response = await fetch('/api/admin/orders');
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success && Array.isArray(result.data)) {
+        return result.data;
+      }
+    }
+  } catch (error) {
+    console.warn('Backend order fetch failed. Using local storage fallback.', error.message);
+  }
+
   return getAdminState().orders;
 };
 
@@ -545,6 +558,16 @@ export const updateOrderStatus = (orderId, status) => {
   });
 
   saveAdminState(state);
+
+  // Try to sync to backend API
+  fetch(`/api/admin/orders/${orderId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, orderStatus: status })
+  }).catch((error) => {
+    console.warn('Failed to sync order status to backend:', error.message);
+  });
+
   return order;
 };
 

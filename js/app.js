@@ -6,6 +6,7 @@ import { initOrderTracking } from './orderTracking.js';
 import { initCursorSystem } from './cursor.js';
 import { initPremiumInteractions } from './interactions.js';
 import { requestFrame } from './performance.js';
+import { themeManager } from './themeManager.js';
 
 if (typeof window !== 'undefined') {
   const initializeApp = () => {
@@ -13,6 +14,7 @@ if (typeof window !== 'undefined') {
     window.__BINDAUD_APP_STARTED = true;
 
     requestFrame(() => {
+      themeManager.init();
       initCursorSystem();
       initPremiumInteractions();
       initSiteNavigation();

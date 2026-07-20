@@ -97,9 +97,32 @@ export const clearCoupon = () => {
   localStorage.removeItem(COUPON_STORAGE_KEY);
 };
 
+// Get tax rate from admin settings (default 5%)
+const getTaxRate = () => {
+  try {
+    // Try to get from admin settings first
+    const adminState = JSON.parse(localStorage.getItem('bindaud_admin_state') || '{}');
+    if (adminState.settings?.tax) {
+      return adminState.settings.tax;
+    }
+    // Fallback to local tax settings
+    const settings = JSON.parse(localStorage.getItem('bindaud_tax_settings') || '{}');
+    return settings.taxRate || 5;
+  } catch {
+    return 5;
+  }
+};
+
+export const setTaxRate = (rate) => {
+  const settings = JSON.parse(localStorage.getItem('bindaud_tax_settings') || '{}');
+  settings.taxRate = Number(rate) || 5;
+  localStorage.setItem('bindaud_tax_settings', JSON.stringify(settings));
+};
+
 export const calculateCartTotals = (cart = getCart()) => {
   const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
   const coupon = getAppliedCoupon();
+  const taxRate = getTaxRate() / 100;
 
   let discountAmount = 0;
   let shipping = subtotal > 0 ? (subtotal >= 10000 ? 0 : 300) : 0;
@@ -116,7 +139,7 @@ export const calculateCartTotals = (cart = getCart()) => {
     shipping = 0;
   }
 
-  const tax = subtotal * 0.05;
+  const tax = (subtotal - discountAmount + shipping) * taxRate;
   const grandTotal = Math.max(0, subtotal - discountAmount + shipping + tax);
 
   return {
@@ -125,6 +148,7 @@ export const calculateCartTotals = (cart = getCart()) => {
     shipping,
     tax,
     grandTotal,
+    taxRate: getTaxRate(),
     coupon
   };
 };

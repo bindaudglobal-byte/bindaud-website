@@ -1,0 +1,359 @@
+/**
+ * Dark Mode Stylesheet for BIN DAUD
+ * Applied when .dark-mode class is present on html element
+ * Covers all pages: home, shop, product, admin, etc.
+ */
+
+html.dark-mode {
+  --color-bg-primary: #0f0f0f;
+  --color-bg-secondary: #1a1a1a;
+  --color-bg-tertiary: #2d2d2d;
+  --color-bg-hover: #3a3a3a;
+
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #b0b0b0;
+  --color-text-tertiary: #808080;
+
+  --color-border: #404040;
+  --color-border-light: #2d2d2d;
+
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-error: #f87171;
+  --color-info: #60a5fa;
+
+  color-scheme: dark;
+}
+
+html.dark-mode,
+html.dark-mode body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Navigation & Header */
+html.dark-mode .site-header,
+html.dark-mode header {
+  background-color: var(--color-bg-secondary);
+  border-bottom-color: var(--color-border);
+}
+
+html.dark-mode .site-header a,
+html.dark-mode .site-header button {
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .site-header button:hover {
+  background-color: var(--color-bg-hover);
+}
+
+html.dark-mode .nav-link {
+  color: var(--color-text-secondary);
+}
+
+html.dark-mode .nav-link:hover,
+html.dark-mode .nav-link.active {
+  color: var(--color-text-primary);
+}
+
+/* Cards & Panels */
+html.dark-mode .card,
+html.dark-mode .admin-card,
+html.dark-mode .admin-panel {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .card:hover {
+  background-color: var(--color-bg-tertiary);
+}
+
+html.dark-mode .product-card {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+}
+
+html.dark-mode .product-card:hover {
+  background-color: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+/* Forms & Inputs */
+html.dark-mode input,
+html.dark-mode textarea,
+html.dark-mode select,
+html.dark-mode .admin-field input,
+html.dark-mode .admin-field textarea,
+html.dark-mode .admin-field select {
+  background-color: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+html.dark-mode input::placeholder,
+html.dark-mode textarea::placeholder,
+html.dark-mode .admin-field input::placeholder,
+html.dark-mode .admin-field textarea::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+html.dark-mode input:focus,
+html.dark-mode textarea:focus,
+html.dark-mode select:focus,
+html.dark-mode .admin-field input:focus,
+html.dark-mode .admin-field textarea:focus,
+html.dark-mode .admin-field select:focus {
+  background-color: var(--color-bg-tertiary);
+  border-color: var(--color-info);
+  outline-color: var(--color-info);
+}
+
+/* Buttons */
+html.dark-mode .btn {
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .btn-ghost {
+  background-color: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .btn-ghost:hover {
+  background-color: var(--color-bg-hover);
+  border-color: var(--color-text-primary);
+}
+
+html.dark-mode .btn-primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+html.dark-mode .btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+html.dark-mode .btn-danger {
+  background-color: #dc2626;
+  color: white;
+}
+
+html.dark-mode .btn-danger:hover {
+  background-color: #b91c1c;
+}
+
+/* Tables */
+html.dark-mode table,
+html.dark-mode .admin-table {
+  border-color: var(--color-border);
+}
+
+html.dark-mode th,
+html.dark-mode td {
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+html.dark-mode th {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+html.dark-mode tbody tr:hover {
+  background-color: var(--color-bg-hover);
+}
+
+html.dark-mode tbody tr:nth-child(even) {
+  background-color: var(--color-bg-secondary);
+}
+
+/* Admin Dashboard */
+html.dark-mode .admin-list-item {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .admin-list-item:hover {
+  background-color: var(--color-bg-tertiary);
+}
+
+html.dark-mode .admin-form-section {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+}
+
+html.dark-mode .admin-field-label {
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .admin-field-hint {
+  color: var(--color-text-tertiary);
+}
+
+/* Modals & Dialogs */
+html.dark-mode .modal,
+html.dark-mode .dialog,
+html.dark-mode [role="dialog"] {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .modal-overlay,
+html.dark-mode .dialog-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Loading & Feedback */
+html.dark-mode .loading-indicator,
+html.dark-mode .spinner {
+  color: var(--color-info);
+}
+
+html.dark-mode .notification {
+  background-color: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .notification.success {
+  background-color: rgba(74, 222, 128, 0.1);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+html.dark-mode .notification.error {
+  background-color: rgba(248, 113, 113, 0.1);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+html.dark-mode .notification.warning {
+  background-color: rgba(250, 204, 21, 0.1);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+html.dark-mode .notification.info {
+  background-color: rgba(96, 165, 250, 0.1);
+  border-color: var(--color-info);
+  color: var(--color-info);
+}
+
+/* Badges & Tags */
+html.dark-mode .badge,
+html.dark-mode .tag {
+  background-color: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .badge.primary {
+  background-color: rgba(37, 99, 235, 0.2);
+  color: var(--color-info);
+}
+
+html.dark-mode .badge.success {
+  background-color: rgba(74, 222, 128, 0.2);
+  color: var(--color-success);
+}
+
+html.dark-mode .badge.error {
+  background-color: rgba(248, 113, 113, 0.2);
+  color: var(--color-error);
+}
+
+/* Separators & Dividers */
+html.dark-mode hr,
+html.dark-mode .divider {
+  border-color: var(--color-border);
+}
+
+/* Links */
+html.dark-mode a {
+  color: #60a5fa;
+}
+
+html.dark-mode a:hover {
+  color: #93c5fd;
+}
+
+/* Scrollbar */
+html.dark-mode ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+html.dark-mode ::-webkit-scrollbar-track {
+  background-color: var(--color-bg-secondary);
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb {
+  background-color: var(--color-bg-tertiary);
+  border-radius: 6px;
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-border);
+}
+
+/* Selection */
+html.dark-mode ::selection {
+  background-color: #2563eb;
+  color: white;
+}
+
+html.dark-mode ::-moz-selection {
+  background-color: #2563eb;
+  color: white;
+}
+
+/* Special Elements */
+html.dark-mode .section-title {
+  color: var(--color-text-primary);
+}
+
+html.dark-mode .section-lead {
+  color: var(--color-text-secondary);
+}
+
+html.dark-mode .breadcrumb,
+html.dark-mode .pagination {
+  color: var(--color-text-secondary);
+}
+
+html.dark-mode .breadcrumb a,
+html.dark-mode .pagination a {
+  color: var(--color-info);
+}
+
+html.dark-mode .breadcrumb a:hover,
+html.dark-mode .pagination a:hover {
+  color: #93c5fd;
+}
+
+/* Footer */
+html.dark-mode footer {
+  background-color: var(--color-bg-secondary);
+  border-top-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+html.dark-mode footer a {
+  color: var(--color-info);
+}
+
+html.dark-mode footer a:hover {
+  color: #93c5fd;
+}
+
+/* Responsive considerations */
+@media (max-width: 768px) {
+  html.dark-mode .mobile-menu,
+  html.dark-mode .mobile-drawer {
+    background-color: var(--color-bg-secondary);
+    border-color: var(--color-border);
+  }
+}

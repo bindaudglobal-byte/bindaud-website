@@ -8,6 +8,7 @@ import {
   getCoupons,
   getDeliverySettings,
   getOrders,
+  getOrdersAsync,
   getProducts,
   getWebsiteSettings,
   logoutAdmin,
@@ -97,7 +98,7 @@ const importAdminData = async (file) => {
 };
 
 const renderSummary = async () => {
-  const orders = getOrders();
+  const orders = await getOrdersAsync();
   const products = await getProducts();
   const summaryCards = select('#summary-cards');
   if (!summaryCards) return;
@@ -145,8 +146,8 @@ const renderSummary = async () => {
   `;
 };
 
-const renderRecentOrders = () => {
-  const orders = getOrders();
+const renderRecentOrders = async () => {
+  const orders = await getOrdersAsync();
   const container = select('#recent-orders-list');
   if (!container) return;
 
@@ -181,14 +182,21 @@ const populateProductForm = (product = null) => {
   select('#product-category', form).value = product?.category || 'Essentials';
   select('#product-collection', form).value = product?.collection || 'tees';
   select('#product-stock', form).value = product?.stock || 'In Stock';
-  select('#product-sizes', form).value = product?.sizeOptions?.join(', ') || '';
-  select('#product-colors', form).value = product?.colorOptions?.join(', ') || '';
-  select('#product-description', form).value = product?.description || '';
   select('#product-code', form).value = product?.code || '';
   select('#featured-toggle', form).checked = Boolean(product?.featured);
   select('#trending-toggle', form).checked = Boolean(product?.trending);
   select('#best-seller-toggle', form).checked = Boolean(product?.bestSeller);
   select('#product-image-file', form).value = '';
+
+  // Optional fields - set to empty strings
+  select('#product-description', form).value = product?.description || '';
+  select('#product-seo-title', form).value = product?.seoTitle || '';
+  select('#product-meta-description', form).value = product?.metaDescription || '';
+  select('#product-slug', form).value = product?.slug || '';
+  select('#product-barcode', form).value = product?.barcode || '';
+  select('#product-og-image', form).value = product?.ogImage || '';
+  select('#product-features', form).value = product?.features || '';
+  select('#product-tags', form).value = product?.tags || '';
 
   // Remove existing image preview
   const preview = form.querySelector('.image-preview');
@@ -239,8 +247,8 @@ const renderProducts = async () => {
   `).join('');
 };
 
-const renderOrders = () => {
-  const orders = getOrders();
+const renderOrders = async () => {
+  const orders = await getOrdersAsync();
   const tableBody = select('#orders-table-body');
   const searchInput = select('#orders-search');
   const statusFilter = select('#orders-status-filter');
@@ -451,9 +459,9 @@ export const initAdminDashboard = async () => {
   imageInput?.addEventListener('change', (e) => handleImagePreview(e.target));
 
   await renderSummary();
-  renderRecentOrders();
+  await renderRecentOrders();
   await renderProducts();
-  renderOrders();
+  await renderOrders();
   renderDeliverySettings();
   renderCoupons();
   renderWebsiteSettings();
@@ -497,7 +505,14 @@ export const initAdminDashboard = async () => {
       featured: Boolean(formData.get('featured')),
       trending: Boolean(formData.get('trending')),
       bestSeller: Boolean(formData.get('bestSeller')),
-      image: imageValue || 'assets/products/product1.jpg'
+      image: imageValue || 'assets/products/product1.jpg',
+      seoTitle: formData.get('seoTitle') || '',
+      metaDescription: formData.get('metaDescription') || '',
+      slug: formData.get('slug') || '',
+      barcode: formData.get('barcode') || '',
+      ogImage: formData.get('ogImage') || '',
+      features: formData.get('features') || '',
+      tags: formData.get('tags') || ''
     };
 
     try {
@@ -538,20 +553,26 @@ export const initAdminDashboard = async () => {
     }
   });
 
-  select('#orders-search')?.addEventListener('input', renderOrders);
-  select('#orders-status-filter')?.addEventListener('change', renderOrders);
-  select('#orders-sort')?.addEventListener('change', renderOrders);
+  select('#orders-search')?.addEventListener('input', async () => {
+    await renderOrders();
+  });
+  select('#orders-status-filter')?.addEventListener('change', async () => {
+    await renderOrders();
+  });
+  select('#orders-sort')?.addEventListener('change', async () => {
+    await renderOrders();
+  });
 
-  select('#orders-table-body')?.addEventListener('change', (event) => {
+  select('#orders-table-body')?.addEventListener('change', async (event) => {
     const target = event.target;
     if (!(target instanceof HTMLSelectElement)) return;
     const orderId = target.dataset.orderStatus;
     if (!orderId) return;
 
     updateOrderStatus(orderId, target.value);
-    renderOrders();
-    renderSummary();
-    renderRecentOrders();
+    await renderOrders();
+    await renderSummary();
+    await renderRecentOrders();
     renderAnalytics();
   });
 
@@ -622,11 +643,11 @@ export const initAdminDashboard = async () => {
     alert('Website settings saved!');
   });
 
-  window.addEventListener('storage', () => {
-    renderSummary();
-    renderRecentOrders();
-    renderProducts();
-    renderOrders();
+  window.addEventListener('storage', async () => {
+    await renderSummary();
+    await renderRecentOrders();
+    await renderProducts();
+    await renderOrders();
     renderCoupons();
     renderAnalytics();
   });

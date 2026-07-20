@@ -28,6 +28,14 @@
     <link rel="stylesheet" href="../css/responsive.css">
     <link rel="stylesheet" href="../css/animation.css">
     <link rel="stylesheet" href="../css/chatbot.css">
+    <link rel="stylesheet" href="../css/dark-mode.css">
+    <script>
+        // Initialize theme before page renders
+        const stored = localStorage.getItem('bindaud-theme-preference');
+        const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const theme = stored || system || 'light';
+        if (theme === 'dark') document.documentElement.classList.add('dark-mode');
+    </script>
 <link rel="stylesheet" href="../css/cursor.css">
 <link rel="stylesheet" href="../css/interactions.css">
     <link rel="stylesheet" href="../css/chatbot.css">
@@ -64,6 +72,7 @@
                     <li><a href="contact.html" class="nav-link active">Contact</a></li>
                 </ul>
             </nav>
+            <button id="toggle-theme-btn" type="button" class="nav-link" title="Toggle dark mode">🌙 Dark Mode</button>
             <a href="shop.html" class="cta">Shop Now</a>
         </div>
     </header>

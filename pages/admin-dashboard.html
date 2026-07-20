@@ -27,6 +27,14 @@
     <link rel="stylesheet" href="../css/interactions.css">
     <link rel="stylesheet" href="../css/admin.css">
     <link rel="stylesheet" href="../css/admin-cms.css">
+    <link rel="stylesheet" href="../css/dark-mode.css">
+    <script>
+        // Initialize theme before page renders
+        const stored = localStorage.getItem('bindaud-theme-preference');
+        const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const theme = stored || system || 'light';
+        if (theme === 'dark') document.documentElement.classList.add('dark-mode');
+    </script>
 </head>
 
 <body class="bd-body">
@@ -431,6 +439,11 @@
     </main>
 
     <script>
+        // Initialize theme manager for admin panel
+        import('../js/themeManager.js').then(({ themeManager }) => {
+            themeManager.init();
+        });
+
         window.__adminBootstrapPromise = import('../js/adminDashboardEnhanced.js?v=' + Date.now()).then(({ initAdminDashboard }) => {
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => initAdminDashboard(), { once: true });
