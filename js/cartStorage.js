@@ -100,29 +100,56 @@ export const clearCoupon = () => {
 // Get tax rate from admin settings (default 5%)
 const getTaxRate = () => {
   try {
-    // Try to get from admin settings first
     const adminState = JSON.parse(localStorage.getItem('bindaud_admin_state') || '{}');
-    if (adminState.settings?.tax) {
-      return adminState.settings.tax;
+    const adminSettings = adminState.settings || {};
+
+    if (Object.prototype.hasOwnProperty.call(adminSettings, 'tax')) {
+      const parsedTax = Number(adminSettings.tax);
+      if (!Number.isNaN(parsedTax)) {
+        return parsedTax;
+      }
     }
-    // Fallback to local tax settings
+
+    if (adminSettings.taxEnabled === false) {
+      return 0;
+    }
+
     const settings = JSON.parse(localStorage.getItem('bindaud_tax_settings') || '{}');
-    return settings.taxRate || 5;
+    if (Object.prototype.hasOwnProperty.call(settings, 'taxRate')) {
+      const parsedTaxRate = Number(settings.taxRate);
+      if (!Number.isNaN(parsedTaxRate)) {
+        return parsedTaxRate;
+      }
+    }
+
+    return 5;
   } catch {
     return 5;
   }
 };
 
 export const setTaxRate = (rate) => {
+  const normalizedRate = Number(rate);
   const settings = JSON.parse(localStorage.getItem('bindaud_tax_settings') || '{}');
-  settings.taxRate = Number(rate) || 5;
+  settings.taxRate = Number.isNaN(normalizedRate) ? 5 : normalizedRate;
   localStorage.setItem('bindaud_tax_settings', JSON.stringify(settings));
+
+  try {
+    const adminState = JSON.parse(localStorage.getItem('bindaud_admin_state') || '{}');
+    if (adminState?.settings) {
+      adminState.settings.tax = settings.taxRate;
+      localStorage.setItem('bindaud_admin_state', JSON.stringify(adminState));
+    }
+  } catch {
+    // Ignore storage write issues and continue with the fallback.
+  }
 };
 
 export const calculateCartTotals = (cart = getCart()) => {
   const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
   const coupon = getAppliedCoupon();
-  const taxRate = getTaxRate() / 100;
+  const taxRateValue = getTaxRate();
+  const taxRate = taxRateValue / 100;
 
   let discountAmount = 0;
   let shipping = subtotal > 0 ? (subtotal >= 10000 ? 0 : 300) : 0;
@@ -139,8 +166,9 @@ export const calculateCartTotals = (cart = getCart()) => {
     shipping = 0;
   }
 
-  const tax = (subtotal - discountAmount + shipping) * taxRate;
-  const grandTotal = Math.max(0, subtotal - discountAmount + shipping + tax);
+  const taxableBase = Math.max(0, subtotal - discountAmount + shipping);
+  const tax = taxRateValue > 0 ? taxableBase * taxRate : 0;
+  const grandTotal = Math.max(0, taxableBase + tax);
 
   return {
     subtotal,

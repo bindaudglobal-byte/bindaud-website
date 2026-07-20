@@ -815,7 +815,10 @@ const buildCheckoutPreviewMarkup = (customer, cart, totals) => {
     <div class="checkout-preview-card">
       <h3>Order Snapshot</h3>
       ${itemList || '<p>No items in the cart.</p>'}
+      <p><strong>Subtotal:</strong> ${formatCurrency(totals.subtotal)}</p>
+      <p><strong>Discount:</strong> ${totals.discountAmount > 0 ? `- ${formatCurrency(totals.discountAmount)}` : formatCurrency(0)}</p>
       <p><strong>Shipping:</strong> ${totals.shipping === 0 ? 'FREE' : formatCurrency(totals.shipping)}</p>
+      <p><strong>Tax:</strong> ${formatCurrency(totals.tax)}</p>
       <p><strong>Grand Total:</strong> ${formatCurrency(totals.grandTotal)}</p>
     </div>
   `;
@@ -851,7 +854,9 @@ const buildWhatsAppMessage = (customer, cart, totals) => {
   lines.push(
     '━━━━━━━━━━━━━━━━━━━━',
     `Subtotal: ${formatCurrency(totals.subtotal)}`,
+    `Discount: ${totals.discountAmount > 0 ? `- ${formatCurrency(totals.discountAmount)}` : formatCurrency(0)}`,
     `Shipping: ${totals.shipping === 0 ? 'FREE' : formatCurrency(totals.shipping)}`,
+    `Tax: ${formatCurrency(totals.tax)}`,
     `Grand Total: ${formatCurrency(totals.grandTotal)}`,
     '━━━━━━━━━━━━━━━━━━━━',
     `📝 Notes: ${customer.notes || 'No additional notes.'}`,

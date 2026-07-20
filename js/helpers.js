@@ -133,7 +133,10 @@ export const resolveSitePath = (path) => {
   return new URL(`${prefix}${normalizedPath}`, window.location.href).href;
 };
 
-export const formatCurrency = (value) => `PKR ${Number(value).toLocaleString('en-PK')}`;
+export const formatCurrency = (value) => {
+  const numericValue = Number(value) || 0;
+  return `PKR ${numericValue.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 
 export const parsePrice = (value) => {
   if (typeof value === 'number') return value;

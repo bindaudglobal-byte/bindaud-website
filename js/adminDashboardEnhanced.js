@@ -1021,13 +1021,15 @@ export const initAdminDashboard = async () => {
       const formData = new FormData(productForm);
       let imageValue = formData.get('imagePath') || 'assets/products/product1.jpg';
 
-      const file = imageUploader?.getFile();
-      if (file) {
+      const uploadedImage = imageUploader?.getFile();
+      if (uploadedImage && typeof uploadedImage === 'object' && 'url' in uploadedImage) {
+        imageValue = uploadedImage.url || imageValue;
+      } else if (uploadedImage instanceof File || uploadedImage instanceof Blob) {
         imageValue = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result);
           reader.onerror = reject;
-          reader.readAsDataURL(file);
+          reader.readAsDataURL(uploadedImage);
         });
       }
 
