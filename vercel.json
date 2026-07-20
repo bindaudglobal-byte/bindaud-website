@@ -1,7 +1,17 @@
 {
-  "framework": "static",
-  "buildCommand": "echo 'Static site ready'",
-  "outputDirectory": ".",
+  "version": 2,
+  "builds": [
+    {
+      "src": "**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
   "env": {
     "NODE_ENV": "production",
     "ADMIN_TOKEN": "admin-token-2026"
