@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="../css/cursor.css">
     <link rel="stylesheet" href="../css/interactions.css">
     <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/admin-cms.css">
 </head>
 
 <body class="bd-body">
@@ -63,58 +64,176 @@
                         </div>
                         <form id="product-form" class="admin-form-grid">
                             <input type="hidden" name="id" id="product-id">
-                            <label class="admin-field">
-                                <span>Product Name</span>
-                                <input type="text" name="name" id="product-name" required>
-                            </label>
-                            <label class="admin-field">
-                                <span>Price</span>
-                                <input type="number" name="price" id="product-price" min="0" required>
-                            </label>
-                            <label class="admin-field">
-                                <span>Old Price</span>
-                                <input type="number" name="oldPrice" id="product-old-price" min="0">
-                            </label>
-                            <label class="admin-field">
-                                <span>Category</span>
-                                <input type="text" name="category" id="product-category" value="Essentials">
-                            </label>
-                            <label class="admin-field">
-                                <span>Collection</span>
-                                <input type="text" name="collection" id="product-collection" value="tees">
-                            </label>
-                            <label class="admin-field">
-                                <span>Stock</span>
-                                <input type="text" name="stock" id="product-stock" value="In Stock">
-                            </label>
-                            <label class="admin-field">
-                                <span>Sizes</span>
-                                <input type="text" name="sizes" id="product-sizes" placeholder="S, M, L">
-                            </label>
-                            <label class="admin-field">
-                                <span>Colors</span>
-                                <input type="text" name="colors" id="product-colors" placeholder="Black, Sand">
-                            </label>
-                            <label class="admin-field">
-                                <span>Product Code</span>
-                                <input type="text" name="code" id="product-code">
-                            </label>
-                            <label class="admin-field admin-field-full">
-                                <span>Description</span>
-                                <textarea name="description" id="product-description" rows="4"></textarea>
-                            </label>
-                            <label class="admin-field admin-field-full">
-                                <span>Upload Image</span>
-                                <input type="file" name="image" id="product-image-file" accept="image/*">
-                                <input type="hidden" name="imagePath" value="assets/products/product1.jpg">
-                            </label>
-                            <div class="admin-checkbox-row">
-                                <label class="admin-checkbox"><input type="checkbox" name="featured" id="featured-toggle"><span>Featured</span></label>
-                                <label class="admin-checkbox"><input type="checkbox" name="trending" id="trending-toggle"><span>Trending</span></label>
-                                <label class="admin-checkbox"><input type="checkbox" name="bestSeller" id="best-seller-toggle"><span>Best Seller</span></label>
+                            <input type="hidden" name="category" id="product-category" value="Essentials">
+                            <input type="hidden" name="collection" id="product-collection" value="tees">
+                            <input type="hidden" name="stock" id="product-stock" value="In Stock">
+                            <input type="hidden" name="gender" id="product-gender" value="Unisex">
+                            <input type="hidden" name="material" id="product-material" value="Cotton">
+                            <input type="hidden" name="fit" id="product-fit" value="Regular">
+                            <input type="hidden" name="season" id="product-season" value="All Year">
+                            
+                            <!-- Product Basic Info -->
+                            <div class="admin-form-section">
+                                <h3 class="admin-form-section-title">Product Information</h3>
+                                
+                                <label class="admin-field">
+                                    <span class="admin-field-label admin-field-required">Product Name</span>
+                                    <input type="text" name="name" id="product-name" required>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Product Code (SKU)</span>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <input type="text" name="code" id="product-code" style="flex: 1;">
+                                        <button type="button" id="auto-sku-btn" class="btn btn-ghost" title="Auto-generate SKU">
+                                            🔄 Generate
+                                        </button>
+                                    </div>
+                                    <p class="admin-field-hint">Format: BD-XXX-XXXX (auto-generates from product name)</p>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label admin-field-required">Price</span>
+                                    <input type="number" name="price" id="product-price" min="0" required>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Discount Price</span>
+                                    <input type="number" name="oldPrice" id="product-old-price" min="0">
+                                    <p class="admin-field-hint">Leave blank for no discount</p>
+                                </label>
                             </div>
+
+                            <!-- Product Media -->
+                            <div class="admin-form-section">
+                                <h3 class="admin-form-section-title">Product Media</h3>
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">Product Image</span>
+                                    <div id="product-image-uploader"></div>
+                                    <input type="hidden" name="imagePath" value="assets/products/product1.jpg">
+                                </label>
+                            </div>
+
+                            <!-- Classification -->
+                            <div class="admin-form-section">
+                                <h3 class="admin-form-section-title">Classification</h3>
+                                
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Category</span>
+                                    <div id="category-dropdown"></div>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Collection</span>
+                                    <div id="collection-dropdown"></div>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Brand</span>
+                                    <input type="text" name="brand" id="product-brand" value="BIN DAUD">
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Gender</span>
+                                    <div id="gender-dropdown"></div>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Material</span>
+                                    <div id="material-dropdown"></div>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Fit</span>
+                                    <div id="fit-dropdown"></div>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Season</span>
+                                    <div id="season-dropdown"></div>
+                                </label>
+                            </div>
+
+                            <!-- Sizing & Variants -->
+                            <div class="admin-form-section">
+                                <h3 class="admin-form-section-title">Sizes & Colors</h3>
+                                
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">Available Sizes</span>
+                                    <div id="size-selector" class="size-chip-container"></div>
+                                    <input type="hidden" name="sizes" id="product-sizes" placeholder="S, M, L">
+                                </label>
+
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">Available Colors</span>
+                                    <div id="color-picker" class="color-picker-grid"></div>
+                                    <input type="hidden" name="colors" id="product-colors" placeholder="Black, Sand">
+                                </label>
+                            </div>
+
+                            <!-- Inventory -->
+                            <div class="admin-form-section">
+                                <h3 class="admin-form-section-title">Inventory</h3>
+                                
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Stock Status</span>
+                                    <div id="stock-dropdown"></div>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Stock Quantity</span>
+                                    <input type="number" name="quantity" id="product-quantity" min="0" value="0">
+                                </label>
+                            </div>
+
+                            <!-- Description & Details -->
+                            <div class="admin-form-section">
+                                <h3 class="admin-form-section-title">Description & Details</h3>
+                                
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">Description</span>
+                                    <textarea name="description" id="product-description" rows="4" placeholder="Enter product description..."></textarea>
+                                </label>
+
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">Features</span>
+                                    <input type="text" name="features" id="product-features" placeholder="Feature 1, Feature 2, Feature 3...">
+                                    <p class="admin-field-hint">Comma-separated list of product features</p>
+                                </label>
+
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">Tags</span>
+                                    <input type="text" name="tags" id="product-tags" placeholder="luxury, streetwear, trending...">
+                                    <p class="admin-field-hint">Comma-separated tags for search and filtering</p>
+                                </label>
+                            </div>
+
+                            <!-- Promotion -->
+                            <div class="admin-form-section">
+                                <h3 class="admin-form-section-title">Promotion & Visibility</h3>
+                                
+                                <div class="admin-checkbox-row">
+                                    <label class="admin-checkbox">
+                                        <input type="checkbox" name="featured" id="featured-toggle">
+                                        <span>Featured Product</span>
+                                    </label>
+                                    <label class="admin-checkbox">
+                                        <input type="checkbox" name="trending" id="trending-toggle">
+                                        <span>Trending</span>
+                                    </label>
+                                    <label class="admin-checkbox">
+                                        <input type="checkbox" name="bestSeller" id="best-seller-toggle">
+                                        <span>Best Seller</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
                             <div class="admin-actions-row">
                                 <button type="submit" id="product-form-submit" class="btn btn-primary">Add Product</button>
+                                <button type="button" id="duplicate-product-btn" class="btn btn-ghost" style="display: none;">
+                                    📋 Duplicate
+                                </button>
                                 <button type="button" id="cancel-product-edit" class="btn btn-ghost">Cancel</button>
                             </div>
                         </form>
@@ -241,7 +360,7 @@
     </main>
 
     <script>
-        window.__adminBootstrapPromise = import('../js/adminDashboard.js?v=' + Date.now()).then(({ initAdminDashboard }) => {
+        window.__adminBootstrapPromise = import('../js/adminDashboardEnhanced.js?v=' + Date.now()).then(({ initAdminDashboard }) => {
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => initAdminDashboard(), { once: true });
             } else {
