@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | BIN DAUD</title>
+    <meta name="description" content="Complete your luxury streetwear order from BIN DAUD with a WhatsApp-ready checkout experience.">
+    <link rel="icon" href="../assets/Favicon/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="../assets/Favicon/favicon.svg">
+    <link rel="apple-touch-icon" href="../assets/Favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../assets/Favicon/site.webmanifest">
+    <meta name="theme-color" content="#21486B">
+    <meta name="msapplication-TileColor" content="#21486B">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/animation.css">
+    <link rel="stylesheet" href="../css/chatbot.css">
+</head>
+
+<body class="bd-body">
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="../index.html" class="brand">
+                <img src="../assets/logo/logo.png" alt="BIN DAUD" width="55">
+                <span class="brand-name">BIN DAUD</span>
+            </a>
+
+            <div class="header-search">
+              <input type="search" class="site-search" placeholder="Search products..." aria-label="Search products">
+            </div>
+
+            <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
+            <label for="nav-toggle" class="hamburger-icon" aria-hidden="true">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </label>
+            <nav class="primary-nav">
+                <ul class="nav-list">
+                    <li><a href="../index.html" class="nav-link">Home</a></li>
+                    <li><a href="shop.html" class="nav-link">Shop</a></li>
+                    <li><a href="wishlist.html" class="nav-link">Wishlist <span id="wishlist-count" class="wishlist-count-badge" aria-label="Wishlist items">0</span></a></li>
+                    <li><a href="cart.html" class="nav-link">Cart <span id="cart-count" class="cart-count-badge" aria-label="Cart items">0</span></a></li>
+                    <li><a href="contact.html" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
+            <a href="shop.html" class="cta">Shop Now</a>
+        </div>
+    </header>
+
+    <main class="checkout-page">
+        <section class="section-hero-subtle">
+            <div class="container text-center">
+                <h1 class="section-title">Checkout</h1>
+                <p class="section-lead">Review your order and send your request to WhatsApp for a premium concierge experience.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="checkout-layout">
+                    <div class="checkout-stack">
+                        <div class="checkout-panel">
+                            <div class="checkout-panel-header">
+                                <h2 class="summary-title">Customer Information</h2>
+                                <p class="section-lead small">We’ll prepare your order request and send it directly to our team.</p>
+                            </div>
+                            <form id="checkout-form" class="checkout-form" novalidate>
+                                <div class="form-row">
+                                    <label class="form-field" for="checkout-full-name">
+                                        <span>Full Name *</span>
+                                        <input id="checkout-full-name" name="fullName" type="text" placeholder="Ayesha Khan" autocomplete="name" required>
+                                        <span class="field-error" data-error-for="checkout-full-name"></span>
+                                    </label>
+                                    <label class="form-field" for="checkout-phone">
+                                        <span>Phone Number *</span>
+                                        <input id="checkout-phone" name="phone" type="tel" placeholder="+92 3XX XXXXXXX" autocomplete="tel" required>
+                                        <span class="field-error" data-error-for="checkout-phone"></span>
+                                    </label>
+                                </div>
+
+                                <div class="form-row">
+                                    <label class="form-field" for="checkout-email">
+                                        <span>Email (optional)</span>
+                                        <input id="checkout-email" name="email" type="email" placeholder="you@example.com" autocomplete="email">
+                                        <span class="field-error" data-error-for="checkout-email"></span>
+                                    </label>
+                                    <label class="form-field" for="checkout-city">
+                                        <span>City *</span>
+                                        <input id="checkout-city" name="city" type="text" placeholder="Karachi" autocomplete="address-level2" required>
+                                        <span class="field-error" data-error-for="checkout-city"></span>
+                                    </label>
+                                </div>
+
+                                <label class="form-field full-width" for="checkout-address">
+                                    <span>Complete Address *</span>
+                                    <textarea id="checkout-address" name="address" rows="3" placeholder="House, street, area, landmark" required></textarea>
+                                    <span class="field-error" data-error-for="checkout-address"></span>
+                                </label>
+
+                                <div class="form-row">
+                                    <label class="form-field" for="checkout-postal-code">
+                                        <span>Postal Code (optional)</span>
+                                        <input id="checkout-postal-code" name="postalCode" type="text" placeholder="75000" autocomplete="postal-code">
+                                        <span class="field-error" data-error-for="checkout-postal-code"></span>
+                                    </label>
+                                    <label class="form-field" for="checkout-province">
+                                        <span>Province</span>
+                                        <input id="checkout-province" name="province" type="text" placeholder="Sindh" autocomplete="address-level1">
+                                        <span class="field-error" data-error-for="checkout-province"></span>
+                                    </label>
+                                </div>
+
+                                <label class="form-field full-width" for="checkout-notes">
+                                    <span>Order Notes</span>
+                                    <textarea id="checkout-notes" name="notes" rows="3" placeholder="Any special requests, gifting details, or delivery preferences"></textarea>
+                                    <span class="field-error" data-error-for="checkout-notes"></span>
+                                </label>
+
+                                <fieldset class="payment-methods">
+                                    <legend>Payment Method</legend>
+                                    <label class="payment-option">
+                                        <input type="radio" name="paymentMethod" value="Cash on Delivery" checked>
+                                        <span>Cash on Delivery</span>
+                                    </label>
+                                    <label class="payment-option">
+                                        <input type="radio" name="paymentMethod" value="Bank Transfer">
+                                        <span>Bank Transfer</span>
+                                    </label>
+                                    <label class="payment-option">
+                                        <input type="radio" name="paymentMethod" value="EasyPaisa">
+                                        <span>EasyPaisa</span>
+                                    </label>
+                                    <label class="payment-option">
+                                        <input type="radio" name="paymentMethod" value="JazzCash">
+                                        <span>JazzCash</span>
+                                    </label>
+                                    <p class="payment-note">We support these payment options for local orders and will share the account details during confirmation.</p>
+                                </fieldset>
+
+                                <div id="payment-method-message" class="payment-note" aria-live="polite">Cash on Delivery selected. We will confirm payment details after checkout.</div>
+                                <div id="checkout-form-errors" class="form-errors" role="alert"></div>
+                            </form>
+                        </div>
+
+                        <div class="checkout-panel">
+                            <div class="checkout-panel-header">
+                                <h2 class="summary-title">Order Preview</h2>
+                                <p class="section-lead small">Your request will be shared in a beautifully formatted WhatsApp message.</p>
+                            </div>
+                            <div id="checkout-preview" class="checkout-preview"></div>
+                        </div>
+                    </div>
+
+                    <aside class="checkout-panel checkout-summary">
+                        <h2 class="summary-title">Order Summary</h2>
+                        <div class="checkout-items"></div>
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span id="checkout-subtotal">PKR 0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount</span>
+                            <span id="checkout-discount">- PKR 0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping</span>
+                            <span id="checkout-shipping">FREE</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax</span>
+                            <span id="checkout-tax">PKR 0</span>
+                        </div>
+                        <div class="summary-divider"></div>
+                        <div class="summary-row total">
+                            <span>Grand Total</span>
+                            <span id="checkout-grand-total">PKR 0</span>
+                        </div>
+                        <p id="checkout-coupon" class="coupon-message">No coupon applied</p>
+                        <form id="checkout-coupon-form" class="coupon-form">
+                            <label for="checkout-coupon-input" class="form-field">
+                                <span>Coupon Code</span>
+                                <div class="coupon-row">
+                                    <input id="checkout-coupon-input" type="text" placeholder="WELCOME10" aria-label="Coupon code">
+                                    <button type="submit" class="btn btn-ghost btn-sm">Apply</button>
+                                </div>
+                            </label>
+                        </form>
+                        <div class="summary-actions">
+                            <button id="whatsapp-submit" class="btn btn-primary btn-full whatsapp-btn" type="button">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M19.1 4.9A9.4 9.4 0 0 0 4.9 19.1L3 21l1.9-1.9A9.4 9.4 0 1 0 19.1 4.9ZM12 19.4a7.3 7.3 0 0 1-3.7-1l-.3-.2-1.2.3 1.3-1.2-.2-.3a7.3 7.3 0 1 1 3.1 2.4Z"></path>
+                                </svg>
+                                Place Order via WhatsApp
+                            </button>
+                            <a href="cart.html" class="btn btn-ghost btn-full">Return to Cart</a>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="checkout-confirmation-modal" class="checkout-confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="confirmation-title" hidden>
+        <div class="checkout-confirmation-card">
+            <h3 id="confirmation-title">Order Sent Successfully?</h3>
+            <p>We opened WhatsApp for your order request. Was your message sent successfully?</p>
+            <div class="summary-actions">
+                <button type="button" class="btn btn-primary" id="confirm-order-yes">Yes</button>
+                <button type="button" class="btn btn-ghost" id="confirm-order-no">No</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="footer-col">
+                <h3 class="footer-title">BIN DAUD</h3>
+                <p class="footer-desc">Premium streetwear brand inspired by Japanese culture and modern luxury.</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitle">Support</h4>
+                <ul class="footer-links">
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="shipping.html">Shipping Info</a></li>
+                    <li><a href="returns.html">Returns</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitle">Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="../privacy.html">Privacy Policy</a></li>
+                    <li><a href="../terms.html">Terms & Conditions</a></li>
+                    <li><a href="../cookies.html">Cookie Policy</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/config.js"></script>
+    <script type="module" src="../js/app.js"></script>
+</body>
+</html>

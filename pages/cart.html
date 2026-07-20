@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart | BIN DAUD</title>
+    <meta name="description" content="Review your premium streetwear selections from BIN DAUD before proceeding to checkout.">
+    <link rel="icon" href="../assets/Favicon/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="../assets/Favicon/favicon.svg">
+    <link rel="apple-touch-icon" href="../assets/Favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../assets/Favicon/site.webmanifest">
+    <meta name="theme-color" content="#21486B">
+    <meta name="msapplication-TileColor" content="#21486B">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/animation.css">
+    <link rel="stylesheet" href="../css/chatbot.css">
+</head>
+
+<body class="bd-body">
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="../index.html" class="brand">
+                <img src="../assets/logo/logo.png" alt="BIN DAUD" width="55">
+                <span class="brand-name">BIN DAUD</span>
+            </a>
+
+            <div class="header-search">
+              <input type="search" class="site-search" placeholder="Search products..." aria-label="Search products">
+            </div>
+
+            <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
+            <label for="nav-toggle" class="hamburger-icon" aria-hidden="true">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </label>
+            <nav class="primary-nav">
+                <ul class="nav-list">
+                    <li><a href="../index.html" class="nav-link">Home</a></li>
+                    <li><a href="shop.html" class="nav-link">Shop</a></li>
+                    <li><a href="wishlist.html" class="nav-link">Wishlist <span id="wishlist-count" class="wishlist-count-badge" aria-label="Wishlist items">0</span></a></li>
+                    <li><a href="collections.html" class="nav-link">Collections</a></li>
+                    <li><a href="cart.html" class="nav-link active">
+                        Cart
+                        <span id="cart-count" class="cart-count-badge">0</span>
+                    </a></li>
+                    <li><a href="contact.html" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
+            <a href="shop.html" class="cta">Shop Now</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- 1. Luxury Hero -->
+        <section class="section-hero-subtle">
+            <div class="container text-center">
+                <h1 class="section-title">Shopping Cart</h1>
+                <p class="section-lead">Review your premium selections before checkout.</p>
+                <nav aria-label="Breadcrumb" class="breadcrumb breadcrumb-center">
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="shop.html">Shop</a></li>
+                        <li><a href="product.html">Product</a></li>
+                        <li><a href="cart.html" aria-current="page">Cart</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </section>
+
+        <!-- 2. Cart Layout -->
+        <section class="section">
+            <div class="container">
+                <div class="cart-layout">
+                    <!-- LEFT COLUMN: Cart Items -->
+                    <div class="cart-items-column">
+                        <!-- Cart items will be dynamically injected here by app.js -->
+                        <!-- <div class="cart-item-card">
+                            <div class="cart-item-image">
+                                <img src="../assets/products/product2.png" alt="Urban Odyssey Cardigan">
+                            </div>
+                            <div class="cart-item-details">
+                                <div class="cart-item-info">
+                                    <h3 class="cart-item-title">Urban Odyssey Cardigan</h3>
+                                    <p class="cart-item-meta">Collection: Urban Odyssey</p>
+                                    <p class="cart-item-meta">Size: L | Color: Black</p>
+                                    <p class="cart-item-meta">Product Code: MZCHYHAM7815</p>
+                                </div>
+                                <div class="cart-item-quantity">
+                                    <div class="quantity-input">
+                                        <button type="button" class="quantity-btn" aria-label="Decrease quantity">-</button>
+                                        <input type="number" value="1" min="1" max="10" aria-label="Product quantity">
+                                        <button type="button" class="quantity-btn" aria-label="Increase quantity">+</button>
+                                    </div>
+                                </div>
+                                <div class="cart-item-price">
+                                    <span class="current-price">PKR 1,884</span>
+                                    <span class="old-price">PKR 2,500</span>
+                                </div>
+                                <div class="cart-item-actions">
+                                    <button class="btn-icon" aria-label="Remove item">🗑️</button>
+                                    <button class="btn-icon" aria-label="Move to Wishlist">❤</button>
+                                </div>
+                            </div>
+                            <div class="cart-item-footer">
+                                <p>✓ Estimated Delivery: 3-5 Business Days</p>
+                                <span class="badge badge-new">Free Shipping</span>
+                            </div>
+                        </div> -->
+                    </div>
+
+                    <!-- RIGHT COLUMN: Order Summary -->
+                    <aside class="order-summary-column">
+                        <div class="order-summary-card">
+                            <h2 class="summary-title">Order Summary</h2>
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span id="summary-subtotal-value">PKR 0</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Discount</span>
+                                <span id="summary-discount-value" class="text-success">- PKR 0</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Shipping</span>
+                                <span id="summary-shipping-value">FREE</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tax</span>
+                                <span id="summary-tax-value">PKR 0</span>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-row total">
+                                <span>Grand Total</span>
+                                <span id="summary-grand-total-value">PKR 0</span>
+                            </div>
+                            <div class="summary-actions">
+                                <button class="btn btn-primary btn-full" type="button">Proceed to Checkout</button>
+                                <button class="btn btn-ghost btn-full" type="button">Continue Shopping</button>
+                            </div>
+                            <div class="trust-badges">
+                                <div class="trust-badge">✓ 100% Authentic</div>
+                                <div class="trust-badge">✓ Secure Checkout</div>
+                                <div class="trust-badge">✓ Free Returns</div>
+                            </div>
+                        </div>
+                        <div class="coupon-card">
+                            <h3 class="coupon-title">Have a Coupon?</h3>
+                            <form class="coupon-form">
+                                <input type="text" class="coupon-input" placeholder="Enter Coupon Code" aria-label="Coupon code">
+                                <button type="submit" class="btn btn-secondary">Apply</button>
+                            </form>
+                            <p id="coupon-message" class="coupon-message" role="status">No coupon applied.</p>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommended Products -->
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title text-center">Customers Also Bought</h2>
+                <div class="grid--4">
+                    <div class="product-card">
+                        <div class="product-media">
+                            <img src="../assets/products/product3.png" alt="Limited Edition Jacket">
+                        </div>
+                        <div class="product-body">
+                            <h3 class="product-title">Limited Edition Jacket</h3>
+                            <p class="product-price">PKR 5,999</p>
+                            <a href="product.html" class="btn btn-primary btn-sm">View Product</a>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-media">
+                            <img src="../assets/products/product1.jpg" alt="Dragon Kimono">
+                        </div>
+                        <div class="product-body">
+                            <h3 class="product-title">Dragon Kimono</h3>
+                            <p class="product-price">PKR 1,884</p>
+                            <a href="product.html" class="btn btn-primary btn-sm">View Product</a>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-media">
+                            <img src="../assets/products/product3.png" alt="Premium Kimono">
+                        </div>
+                        <div class="product-body">
+                            <h3 class="product-title">Premium Collection</h3>
+                            <p class="product-price">PKR 1,884</p>
+                            <a href="product.html" class="btn btn-primary btn-sm">View Product</a>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-media">
+                            <img src="../assets/products/product2.png" alt="Premium Jacket">
+                        </div>
+                        <div class="product-body">
+                            <h3 class="product-title">Premium Jacket</h3>
+                            <p class="product-price">PKR 4,999</p>
+                            <a href="product.html" class="btn btn-primary btn-sm">View Product</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Empty Cart State (Hidden by default) -->
+        <div class="empty-cart-container" style="display: none;">
+            <div class="container text-center">
+                <img src="../assets/icons/empty-cart.svg" alt="Empty shopping cart illustration" class="empty-cart-image">
+                <h2 class="section-title">Your Cart is Empty</h2>
+                <p class="section-lead">Looks like you haven't added anything to your cart yet. Discover our latest collection.</p>
+                <a href="shop.html" class="btn btn-primary">Shop Now</a>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="footer-col">
+                <h3 class="footer-title">BIN DAUD</h3>
+                <p class="footer-desc">Premium streetwear brand inspired by Japanese culture and modern luxury.</p>
+                <div class="social-links">
+                    <a href="https://www.instagram.com/bindaudglobal/" class="social-icon" aria-label="Instagram" target="_blank" rel="noopener noreferrer">📱</a>
+                    <a href="https://www.facebook.com/profile.php?id=61591782530716" class="social-icon" aria-label="Facebook" target="_blank" rel="noopener noreferrer">f</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitle">Shop</h4>
+                <ul class="footer-links">
+                    <li><a href="shop.html#new-arrivals">New Arrivals</a></li>
+                    <li><a href="shop.html#best-sellers">Best Sellers</a></li>
+                    <li><a href="collections.html">Collections</a></li>
+                    <li><a href="shop.html#sale">Sale</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitle">Support</h4>
+                <ul class="footer-links">
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="shipping.html">Shipping Info</a></li>
+                    <li><a href="returns.html">Returns</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitle">Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="../privacy.html">Privacy Policy</a></li>
+                    <li><a href="../terms.html">Terms & Conditions</a></li>
+                    <li><a href="../cookies.html">Cookie Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="copyright">© 2026 BIN DAUD. All rights reserved. | Crafted with luxury in Pakistan.</p>
+        </div>
+    </footer>
+
+    <script src="../js/config.js"></script>
+    <script type="module" src="../js/app.js"></script>
+</body>
+
+</html>

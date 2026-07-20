@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wishlist | BIN DAUD</title>
+  <meta name="description" content="Your saved wishlist items at BIN DAUD">
+  <link rel="icon" href="../assets/Favicon/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="../assets/Favicon/favicon.svg">
+  <link rel="apple-touch-icon" href="../assets/Favicon/apple-touch-icon.png">
+  <link rel="manifest" href="../assets/Favicon/site.webmanifest">
+  <meta name="theme-color" content="#21486B">
+  <meta name="msapplication-TileColor" content="#21486B">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/animation.css">
+  <link rel="stylesheet" href="../css/chatbot.css">
+</head>
+<body class="bd-body">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../index.html" class="brand">
+        <img src="../assets/logo/logo.png" alt="BIN DAUD" width="55">
+        <span class="brand-name">BIN DAUD</span>
+      </a>
+
+      <div class="header-search">
+        <input type="search" class="site-search" placeholder="Search products..." aria-label="Search products">
+      </div>
+
+      <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
+      <label for="nav-toggle" class="hamburger-icon" aria-hidden="true">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </label>
+
+      <nav class="primary-nav">
+        <ul class="nav-list">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="shop.html" class="nav-link">Shop</a></li>
+          <li><a href="cart.html" class="nav-link">Cart <span id="cart-count" class="cart-count-badge">0</span></a></li>
+          <li><a href="wishlist.html" class="nav-link active">Wishlist <span id="wishlist-count" class="wishlist-count-badge">0</span></a></li>
+          <li><a href="collections.html" class="nav-link">Collections</a></li>
+          <li><a href="../about.html" class="nav-link">About</a></li>
+          <li><a href="contact.html" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+
+      <a href="shop.html" class="cta">Shop Now</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <h1 class="section-title text-center">Your Wishlist</h1>
+        <p class="section-lead text-center">Saved pieces you can review or move to cart.</p>
+
+        <div id="wishlist-shell" class="wishlist-shell">
+          <!-- Filled by js -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-col">
+        <h3 class="footer-title">BIN DAUD</h3>
+        <p class="footer-desc">Premium streetwear brand inspired by Japanese culture and modern luxury.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/config.js"></script>
+  <script type="module">
+    import { initSite } from '../js/cart.js';
+    import { renderWishlistPage } from '../js/wishlist.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initSite();
+      const shell = document.getElementById('wishlist-shell');
+      renderWishlistPage(shell);
+    });
+  </script>
+</body>
+</html>

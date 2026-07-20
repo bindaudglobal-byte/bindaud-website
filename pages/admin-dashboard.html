@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | BIN DAUD</title>
+    <meta name="description" content="BIN DAUD admin dashboard for storefront management.">
+    <link rel="icon" href="../assets/Favicon/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="../assets/Favicon/favicon.svg">
+    <link rel="apple-touch-icon" href="../assets/Favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../assets/Favicon/site.webmanifest">
+    <meta name="theme-color" content="#21486B">
+    <meta name="msapplication-TileColor" content="#21486B">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/animation.css">
+</head>
+
+<body class="bd-body">
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="../index.html" class="brand">
+                <img src="../assets/logo/logo.png" alt="BIN DAUD" width="55">
+                <span class="brand-name">BIN DAUD</span>
+            </a>
+            <div class="admin-toolbar">
+                <a href="../index.html" class="btn btn-ghost btn-sm">View Store</a>
+                <button id="admin-logout" type="button" class="btn btn-primary btn-sm">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <div class="admin-intro">
+                    <p class="uppercase">Admin Dashboard</p>
+                    <h1 class="section-title">Manage the BIN DAUD storefront from one place.</h1>
+                    <p class="section-lead">Everything is stored locally for now, with a modular structure that can be extended to a future backend.</p>
+                </div>
+
+                <div id="summary-cards" class="admin-summary-grid"></div>
+
+                <div class="admin-panel-stack">
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <h2>Product Manager</h2>
+                        </div>
+                        <form id="product-form" class="admin-form-grid">
+                            <input type="hidden" name="id" id="product-id">
+                            <label class="admin-field">
+                                <span>Product Name</span>
+                                <input type="text" name="name" id="product-name" required>
+                            </label>
+                            <label class="admin-field">
+                                <span>Price</span>
+                                <input type="number" name="price" id="product-price" min="0" required>
+                            </label>
+                            <label class="admin-field">
+                                <span>Old Price</span>
+                                <input type="number" name="oldPrice" id="product-old-price" min="0">
+                            </label>
+                            <label class="admin-field">
+                                <span>Category</span>
+                                <input type="text" name="category" id="product-category" value="Essentials">
+                            </label>
+                            <label class="admin-field">
+                                <span>Collection</span>
+                                <input type="text" name="collection" id="product-collection" value="tees">
+                            </label>
+                            <label class="admin-field">
+                                <span>Stock</span>
+                                <input type="text" name="stock" id="product-stock" value="In Stock">
+                            </label>
+                            <label class="admin-field">
+                                <span>Sizes</span>
+                                <input type="text" name="sizes" id="product-sizes" placeholder="S, M, L">
+                            </label>
+                            <label class="admin-field">
+                                <span>Colors</span>
+                                <input type="text" name="colors" id="product-colors" placeholder="Black, Sand">
+                            </label>
+                            <label class="admin-field">
+                                <span>Product Code</span>
+                                <input type="text" name="code" id="product-code">
+                            </label>
+                            <label class="admin-field admin-field-full">
+                                <span>Description</span>
+                                <textarea name="description" id="product-description" rows="4"></textarea>
+                            </label>
+                            <label class="admin-field admin-field-full">
+                                <span>Upload Image</span>
+                                <input type="file" name="image" id="product-image-file" accept="image/*">
+                                <input type="hidden" name="imagePath" value="assets/products/product1.jpg">
+                            </label>
+                            <div class="admin-checkbox-row">
+                                <label class="admin-checkbox"><input type="checkbox" name="featured" id="featured-toggle"><span>Featured</span></label>
+                                <label class="admin-checkbox"><input type="checkbox" name="trending" id="trending-toggle"><span>Trending</span></label>
+                                <label class="admin-checkbox"><input type="checkbox" name="bestSeller" id="best-seller-toggle"><span>Best Seller</span></label>
+                            </div>
+                            <div class="admin-actions-row">
+                                <button type="submit" id="product-form-submit" class="btn btn-primary">Add Product</button>
+                                <button type="button" id="cancel-product-edit" class="btn btn-ghost">Cancel</button>
+                            </div>
+                        </form>
+                        <div id="product-list" class="admin-list"></div>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <h2>Order Manager</h2>
+                        </div>
+                        <div class="admin-toolbar-row">
+                            <input type="search" id="orders-search" class="collection-search" placeholder="Search orders">
+                            <select id="orders-status-filter" class="collection-sort">
+                                <option value="all">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                            <select id="orders-sort" class="collection-sort">
+                                <option value="newest">Newest</option>
+                                <option value="highest">Highest Total</option>
+                            </select>
+                        </div>
+                        <div class="admin-table-wrap">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Phone</th>
+                                        <th>Address</th>
+                                        <th>City</th>
+                                        <th>Products</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-table-body"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <h2>Delivery Settings</h2>
+                        </div>
+                        <form id="delivery-settings-form" class="admin-form-grid">
+                            <label class="admin-field"><span>Islamabad Delivery</span><input type="number" name="islamabad" id="delivery-islamabad"></label>
+                            <label class="admin-field"><span>Punjab Delivery</span><input type="number" name="punjab" id="delivery-punjab"></label>
+                            <label class="admin-field"><span>KPK Delivery</span><input type="number" name="kpk" id="delivery-kpk"></label>
+                            <label class="admin-field"><span>Sindh Delivery</span><input type="number" name="sindh" id="delivery-sindh"></label>
+                            <label class="admin-field"><span>Balochistan Delivery</span><input type="number" name="balochistan" id="delivery-balochistan"></label>
+                            <label class="admin-field"><span>Free Shipping Limit</span><input type="number" name="freeShippingLimit" id="free-shipping-limit"></label>
+                            <label class="admin-checkbox admin-field-full"><input type="checkbox" name="expressShipping" id="express-shipping"><span>Express Shipping</span></label>
+                            <button type="submit" class="btn btn-primary">Save Delivery Settings</button>
+                        </form>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <h2>Discount Manager</h2>
+                        </div>
+                        <form id="coupon-form" class="admin-form-grid">
+                            <label class="admin-field"><span>Coupon Code</span><input type="text" name="code" required></label>
+                            <label class="admin-field"><span>Discount (%)</span><input type="number" name="discount" min="0" max="100" required></label>
+                            <label class="admin-field"><span>Expiry Date</span><input type="date" name="expiry"></label>
+                            <label class="admin-field"><span>Usage Limit</span><input type="number" name="usageLimit" min="0"></label>
+                            <button type="submit" class="btn btn-primary">Create Coupon</button>
+                        </form>
+                        <div id="coupon-list" class="admin-list"></div>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <h2>Website Settings</h2>
+                        </div>
+                        <form id="website-settings-form" class="admin-form-grid">
+                            <label class="admin-field"><span>Business Name</span><input type="text" name="businessName" id="business-name"></label>
+                            <label class="admin-field"><span>WhatsApp Number</span><input type="text" name="whatsappNumber" id="whatsapp-number"></label>
+                            <label class="admin-field"><span>Facebook</span><input type="text" name="facebook" id="facebook-link"></label>
+                            <label class="admin-field"><span>Instagram</span><input type="text" name="instagram" id="instagram-link"></label>
+                            <label class="admin-field"><span>Google Business</span><input type="text" name="googleBusiness" id="google-business"></label>
+                            <label class="admin-field"><span>Email</span><input type="email" name="email" id="email-address"></label>
+                            <label class="admin-field"><span>Currency</span><input type="text" name="currency" id="currency-input" value="PKR"></label>
+                            <label class="admin-field"><span>Tax (%)</span><input type="number" name="tax" id="tax-input"></label>
+                            <label class="admin-field admin-field-full"><span>Shipping</span><textarea name="shipping" id="shipping-input" rows="3"></textarea></label>
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </form>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <h2>Analytics</h2>
+                        </div>
+                        <div class="admin-analytics-grid">
+                            <div>
+                                <h3>Top Selling Products</h3>
+                                <ul id="top-selling-list" class="admin-list"></ul>
+                            </div>
+                            <div>
+                                <h3>Most Viewed Products</h3>
+                                <ul id="most-viewed-list" class="admin-list"></ul>
+                            </div>
+                            <div class="admin-field-full">
+                                <h3>Revenue Chart</h3>
+                                <div id="revenue-chart" class="chart-stack"></div>
+                            </div>
+                            <div class="admin-field-full">
+                                <h3>Recent Activity</h3>
+                                <ul id="activity-feed" class="admin-list"></ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="admin-panel">
+                        <div class="admin-panel-head">
+                            <h2>Recent Orders</h2>
+                        </div>
+                        <div id="recent-orders-list" class="admin-list"></div>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="../js/adminApp.js"></script>
+</body>
+
+</html>

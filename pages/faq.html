@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frequently Asked Questions | BIN DAUD</title>
+    <meta name="description" content="Find answers to common questions about BIN DAUD products, orders, shipping, and returns.">
+    <link rel="canonical" href="https://bindaud.com/pages/faq.html">
+    <meta property="og:title" content="FAQ | BIN DAUD">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/animation.css">
+    <link rel="stylesheet" href="../css/chatbot.css">
+    <style>
+        .faq-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .faq-item {
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 1rem;
+        }
+        .faq-question {
+            cursor: pointer;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            background: rgba(33, 72, 107, 0.02);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .faq-question:hover {
+            background: rgba(33, 72, 107, 0.08);
+        }
+        .faq-question.active {
+            background: rgba(212, 165, 116, 0.1);
+        }
+        .faq-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+        .faq-question.active .faq-icon {
+            transform: rotate(180deg);
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            padding: 0 1rem;
+        }
+        .faq-answer.active {
+            max-height: 500px;
+            padding: 1rem;
+        }
+        .faq-answer p {
+            margin: 0;
+            color: var(--color-text-light);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body class="bd-body">
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="../index.html" class="brand">
+                <img src="../assets/logo/logo.png" alt="BIN DAUD Logo" width="55">
+                <span class="brand-name">BIN DAUD</span>
+            </a>
+
+            <div class="header-search">
+              <input type="search" class="site-search" placeholder="Search products..." aria-label="Search products">
+            </div>
+
+            <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu">
+            <label for="nav-toggle" class="hamburger-icon" aria-hidden="true">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </label>
+            <nav class="primary-nav">
+                <ul class="nav-list">
+                    <li><a href="../index.html" class="nav-link">Home</a></li>
+                    <li><a href="shop.html" class="nav-link">Shop</a></li>
+                    <li><a href="wishlist.html" class="nav-link">Wishlist <span id="wishlist-count" class="wishlist-count-badge" aria-label="Wishlist items">0</span></a></li>
+                    <li><a href="cart.html" class="nav-link">Cart <span id="cart-count" class="cart-count-badge" aria-label="Cart items">0</span></a></li>
+                    <li><a href="collections.html" class="nav-link">Collections</a></li>
+                    <li><a href="../about.html" class="nav-link">About</a></li>
+                    <li><a href="contact.html" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
+            <a href="shop.html" class="cta">Shop Now</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <div class="text-center" style="margin-bottom: 3rem;">
+                    <p class="uppercase">Got Questions?</p>
+                    <h1 class="section-title">Frequently Asked Questions</h1>
+                    <p class="section-lead">Find answers to common questions about BIN DAUD.</p>
+                </div>
+
+                <div class="faq-container">
+                    <!-- Products -->
+                    <h2 style="margin-top: 2rem; margin-bottom: 1.5rem; color: var(--color-primary);">📦 Products</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-1">
+                            <span>What sizes do you offer?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-1" class="faq-answer">
+                            <p>We offer sizes XS, S, M, L, XL, and 2XL. Each product has a detailed size guide in the product description. Check our size chart before ordering to ensure perfect fit.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-2">
+                            <span>What materials do you use?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-2" class="faq-answer">
+                            <p>All BIN DAUD pieces are crafted from premium materials including 100% cotton, high-quality blends, and sustainable fabrics. Each product page lists specific materials and care instructions.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-3">
+                            <span>Are your products sustainable?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-3" class="faq-answer">
+                            <p>Yes! We're committed to sustainability. We use eco-friendly materials where possible, minimize waste in production, and use biodegradable packaging for all shipments.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-4">
+                            <span>Can I customize or personalize products?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-4" class="faq-answer">
+                            <p>Customization options vary by product. Contact us at <a href="mailto:hello@bindaud.com">hello@bindaud.com</a> to discuss personalization possibilities for your order.</p>
+                        </div>
+                    </div>
+
+                    <!-- Ordering -->
+                    <h2 style="margin-top: 2rem; margin-bottom: 1.5rem; color: var(--color-primary);">🛒 Ordering</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-5">
+                            <span>How do I place an order?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-5" class="faq-answer">
+                            <p>Browse our shop, select your items, choose your size and color, and add to cart. Proceed to checkout, fill in your details, and submit. You'll receive an order confirmation on WhatsApp.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-6">
+                            <span>Do you offer discounts or coupons?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-6" class="faq-answer">
+                            <p>Yes! We regularly run promotions and offer discount codes. Subscribe to our newsletter to stay updated on the latest offers. You can apply coupon codes during checkout.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-7">
+                            <span>What payment methods do you accept?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-7" class="faq-answer">
+                            <p>We accept Cash on Delivery (COD), bank transfers, and mobile wallet payments (EasyPaisa/JazzCash). Choose your preferred method during checkout.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-8">
+                            <span>Is my order information secure?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-8" class="faq-answer">
+                            <p>Yes! Your personal information is stored securely and encrypted. We never share your data with third parties. See our Privacy Policy for more details.</p>
+                        </div>
+                    </div>
+
+                    <!-- Shipping -->
+                    <h2 style="margin-top: 2rem; margin-bottom: 1.5rem; color: var(--color-primary);">📦 Shipping & Delivery</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-9">
+                            <span>How long does delivery take?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-9" class="faq-answer">
+                            <p>Standard delivery takes 3-5 business days across Pakistan. Express delivery (1-2 days) is available for Islamabad metro areas. Check our Shipping Info page for full details.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-10">
+                            <span>How much is shipping?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-10" class="faq-answer">
+                            <p>Shipping costs vary by location: Islamabad (PKR 250), Punjab (PKR 300), KPK (PKR 400), Sindh (PKR 500), Balochistan (PKR 700). <strong>Free shipping on orders over PKR 8,000!</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-11">
+                            <span>Can I track my order?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-11" class="faq-answer">
+                            <p>Yes! You'll receive tracking information via WhatsApp once your order ships. You can also contact us for real-time delivery updates.</p>
+                        </div>
+                    </div>
+
+                    <!-- Returns -->
+                    <h2 style="margin-top: 2rem; margin-bottom: 1.5rem; color: var(--color-primary);">🔄 Returns & Exchanges</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-12">
+                            <span>What's your return policy?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-12" class="faq-answer">
+                            <p>We offer a hassle-free 7-day return policy. Items must be unworn, unused, and in original packaging. Visit our Returns page for complete details.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-13">
+                            <span>How do I initiate a return?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-13" class="faq-answer">
+                            <p>Contact us via WhatsApp or email within 7 days of delivery. We'll provide return shipping instructions and cover shipping costs for valid returns.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" tabindex="0" role="button" aria-expanded="false" aria-controls="faq-14">
+                            <span>What if my item arrives damaged?</span>
+                            <span class="faq-icon">⬇️</span>
+                        </div>
+                        <div id="faq-14" class="faq-answer">
+                            <p>If your item arrives damaged, contact us immediately with photos. We'll send a replacement or full refund at no cost to you.</p>
+                        </div>
+                    </div>
+
+                    <!-- Contact -->
+                    <h2 style="margin-top: 2rem; margin-bottom: 1.5rem; color: var(--color-primary);">💬 Still Have Questions?</h2>
+                    <div style="padding: 1.5rem; background: rgba(212, 165, 116, 0.1); border-radius: 1rem; text-align: center; margin-bottom: 2rem;">
+                        <p>Can't find what you're looking for? We're here to help!</p>
+                        <a href="contact.html" class="btn btn-primary" style="margin-top: 1rem;">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="footer-col">
+                <h3 class="footer-title">BIN DAUD</h3>
+                <p class="footer-desc">Premium streetwear brand inspired by Japanese culture and modern luxury.</p>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/profile.php?id=61591782530716" class="social-icon" aria-label="Facebook" target="_blank" rel="noopener noreferrer">f</a>
+                    <a href="https://www.instagram.com/bindaudglobal/" class="social-icon" aria-label="Instagram" target="_blank" rel="noopener noreferrer">📷</a>
+                    <a href="https://wa.me/923288582902" class="social-icon" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer">💬</a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitle">Shop</h4>
+                <ul class="footer-links">
+                    <li><a href="shop.html#new-arrivals">New Arrivals</a></li>
+                    <li><a href="shop.html#best-sellers">Best Sellers</a></li>
+                    <li><a href="collections.html">Collections</a></li>
+                    <li><a href="shop.html#sale">Sale</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitle">Support</h4>
+                <ul class="footer-links">
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="shipping.html">Shipping Info</a></li>
+                    <li><a href="returns.html">Returns</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitle">Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="../privacy.html">Privacy Policy</a></li>
+                    <li><a href="../terms.html">Terms & Conditions</a></li>
+                    <li><a href="../cookies.html">Cookie Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p class="copyright">© 2026 BIN DAUD. All rights reserved. | Crafted with luxury in Pakistan.</p>
+        </div>
+    </footer>
+
+    <script src="../js/config.js"></script>
+    <script type="module" src="../js/app.js"></script>
+    <script>
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const item = question.parentElement;
+                const answer = question.nextElementSibling;
+                const isActive = question.classList.contains('active');
+                
+                document.querySelectorAll('.faq-question.active').forEach(q => {
+                    if (q !== question) {
+                        q.classList.remove('active');
+                        q.setAttribute('aria-expanded', 'false');
+                        q.nextElementSibling.classList.remove('active');
+                    }
+                });
+                
+                if (!isActive) {
+                    question.classList.add('active');
+                    question.setAttribute('aria-expanded', 'true');
+                    answer.classList.add('active');
+                } else {
+                    question.classList.remove('active');
+                    question.setAttribute('aria-expanded', 'false');
+                    answer.classList.remove('active');
+                }
+            });
+
+            question.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    question.click();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

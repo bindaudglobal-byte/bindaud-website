@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | BIN DAUD</title>
+    <meta name="description" content="Secure faculty login for the BIN DAUD admin dashboard.">
+    <link rel="icon" href="../assets/Favicon/favicon.ico" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="../assets/Favicon/favicon.svg">
+    <link rel="apple-touch-icon" href="../assets/Favicon/apple-touch-icon.png">
+    <link rel="manifest" href="../assets/Favicon/site.webmanifest">
+    <meta name="theme-color" content="#21486B">
+    <meta name="msapplication-TileColor" content="#21486B">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/animation.css">
+</head>
+
+<body class="bd-body">
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="../index.html" class="brand">
+                <img src="../assets/logo/logo.png" alt="BIN DAUD" width="55">
+                <span class="brand-name">BIN DAUD</span>
+            </a>
+            <a href="../index.html" class="cta">Return Store</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <div class="admin-shell">
+                    <div class="admin-panel">
+                        <p class="uppercase">Admin Access</p>
+                        <h1 class="section-title">Secure admin login.</h1>
+                        <p class="section-lead">Manage products, orders, delivery logic, coupons, and storefront settings without leaving the existing BIN DAUD experience.</p>
+
+                        <form id="admin-login-form" class="admin-form">
+                            <label class="admin-field">
+                                <span>Username</span>
+                                <input type="text" name="username" placeholder="Enter username" required>
+                            </label>
+                            <label class="admin-field">
+                                <span>Password</span>
+                                <input type="password" name="password" placeholder="Enter password" required>
+                            </label>
+                            <label class="admin-checkbox">
+                                <input type="checkbox" name="remember" value="true">
+                                <span>Remember me</span>
+                            </label>
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </form>
+                        <p id="login-error" class="admin-error"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="../js/adminApp.js"></script>
+</body>
+
+</html>

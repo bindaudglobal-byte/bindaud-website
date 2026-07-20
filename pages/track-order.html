@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Order | BIN DAUD</title>
+    <meta name="description" content="Get help tracking your BIN DAUD order and contacting support.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="../css/animation.css">
+    <link rel="stylesheet" href="../css/chatbot.css">
+</head>
+<body class="bd-body">
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="../index.html" class="brand">
+                <img src="../assets/logo/logo.png" alt="BIN DAUD" width="55">
+                <span class="brand-name">BIN DAUD</span>
+            </a>
+
+            <div class="header-search">
+              <input type="search" class="site-search" placeholder="Search products..." aria-label="Search products">
+            </div>
+
+            <nav class="primary-nav">
+                <ul class="nav-list">
+                    <li><a href="../index.html" class="nav-link">Home</a></li>
+                    <li><a href="shop.html" class="nav-link">Shop</a></li>
+                    <li><a href="wishlist.html" class="nav-link">Wishlist <span id="wishlist-count" class="wishlist-count-badge" aria-label="Wishlist items">0</span></a></li>
+                    <li><a href="collections.html" class="nav-link">Collections</a></li>
+                    <li><a href="cart.html" class="nav-link">Cart</a></li>
+                    <li><a href="contact.html" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
+            <a href="shop.html" class="cta">Shop Now</a>
+        </div>
+    </header>
+
+    <main class="track-order-page">
+        <section class="section">
+            <div class="container">
+                <div class="section-header text-center">
+                    <p class="eyebrow uppercase">Order Support</p>
+                    <h1 class="section-title">Track Your Order</h1>
+                    <p class="section-lead">Use your order reference, phone number, or customer name to review the latest order status.</p>
+                </div>
+                <div class="about-card glass-card" style="max-width: 720px; margin: 2rem auto 0; padding: 2rem;">
+                    <form id="track-order-form" class="newsletter-form" style="margin: 0 0 1rem 0;">
+                        <input type="text" name="orderQuery" class="newsletter-input" placeholder="Order reference or phone number" aria-label="Track your order" required>
+                        <button type="submit" class="btn btn-primary">Track Order</button>
+                    </form>
+                    <div id="track-order-results"></div>
+                    <h3 style="margin-top: 1.5rem;">Recent Orders</h3>
+                    <ul id="latest-orders" class="admin-list"></ul>
+                    <div class="hero-actions" style="margin-top: 1.25rem;">
+                        <a href="contact.html" class="btn btn-primary">Contact Support</a>
+                        <a href="https://wa.me/923288582902" target="_blank" rel="noopener noreferrer" class="btn btn-ghost">WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="footer-col">
+                <h3 class="footer-title">BIN DAUD</h3>
+                <p class="footer-desc">Premium streetwear brand inspired by Japanese culture and modern luxury.</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-subtitle">Support</h4>
+                <ul class="footer-links">
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="shipping.html">Shipping Info</a></li>
+                    <li><a href="returns.html">Returns</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/config.js"></script>
+    <script type="module" src="../js/app.js"></script>
+</body>
+</html>
