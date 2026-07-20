@@ -50,6 +50,9 @@ app.get('/api/health', (_req, res) => {
   res.json({ success: true, message: 'BIN DAUD backend is online' });
 });
 
+// Simple file-based admin API (for Vercel deployment)
+app.use('/api/admin', require('./routes/simpleAdminRoutes'));
+
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));

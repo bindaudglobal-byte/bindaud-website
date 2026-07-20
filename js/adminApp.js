@@ -1,13 +1,22 @@
-import { initAdminDashboard, initAdminLogin } from './adminDashboard.js';
+async function runAdminEntry() {
+  const { initAdminDashboard, initAdminLogin } = await import('./adminDashboard.js');
+  const path = window.location.pathname || '';
+
+  if (path.includes('admin-dashboard.html')) {
+    await initAdminDashboard();
+  }
+
+  if (path.includes('admin-login.html')) {
+    initAdminLogin();
+  }
+}
 
 if (typeof window !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
-    if (window.location.pathname.includes('admin-dashboard.html')) {
-      initAdminDashboard();
-    }
-
-    if (window.location.pathname.includes('admin-login.html')) {
-      initAdminLogin();
-    }
-  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      runAdminEntry();
+    }, { once: true });
+  } else {
+    runAdminEntry();
+  }
 }

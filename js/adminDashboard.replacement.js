@@ -21,9 +21,9 @@ import { resolveSitePath } from './helpers.js';
 
 const select = (selector, parent = document) => parent.querySelector(selector);
 
-const renderSummary = async () => {
+const renderSummary = () => {
   const orders = getOrders();
-  const products = await getProducts();
+  const products = getProducts();
   const summaryCards = select('#summary-cards');
   if (!summaryCards) return;
 
@@ -117,8 +117,8 @@ const populateProductForm = (product = null) => {
   select('#product-form-submit', form).textContent = product ? 'Update Product' : 'Add Product';
 };
 
-const renderProducts = async () => {
-  const products = await getProducts();
+const renderProducts = () => {
+  const products = getProducts();
   const list = select('#product-list');
   if (!list) return;
 
@@ -304,35 +304,26 @@ export const initAdminLogin = () => {
     return;
   }
 
-  form?.addEventListener('submit', async (event) => {
+  form?.addEventListener('submit', (event) => {
     event.preventDefault();
-    console.log('initAdminLogin: submit handler fired');
     const formData = new FormData(form);
     const username = formData.get('username') || '';
     const password = formData.get('password') || '';
     const rememberMe = Boolean(formData.get('remember'));
 
-    try {
-      const success = await authenticateAdmin(username, password, rememberMe);
-      console.log('initAdminLogin: authenticateAdmin result ->', success);
-      if (success) {
-        window.location.href = '/pages/admin-dashboard.html';
-      } else {
-        const error = select('#login-error');
-        if (error) error.textContent = 'Username or password is incorrect.';
-      }
-    } catch (e) {
-      console.error('initAdminLogin: authentication error', e);
+    if (authenticateAdmin(username, password, rememberMe)) {
+      window.location.href = 'admin-dashboard.html';
+    } else {
       const error = select('#login-error');
-      if (error) error.textContent = 'Authentication error. Check console.';
+      if (error) error.textContent = 'Username or password is incorrect.';
     }
   });
 };
 
-export const initAdminDashboard = async () => {
+export const initAdminDashboard = () => {
   const session = getAdminSession();
   if (!session?.loggedIn) {
-    window.location.href = '/pages/admin-login.html';
+    window.location.href = 'admin-login.html';
     return;
   }
 
@@ -345,9 +336,9 @@ export const initAdminDashboard = async () => {
   const productForm = select('#product-form');
   const cancelEditButton = select('#cancel-product-edit');
 
-  await renderSummary();
+  renderSummary();
   renderRecentOrders();
-  await renderProducts();
+  renderProducts();
   renderOrders();
   renderDeliverySettings();
   renderCoupons();
@@ -369,19 +360,11 @@ export const initAdminDashboard = async () => {
       });
     }
 
-    const nameValue = String(formData.get('name') || '').trim();
-    const priceValue = Number(formData.get('price')) || 0;
-
-    if (!nameValue || priceValue <= 0) {
-      alert('Please enter a valid product name and price.');
-      return;
-    }
-
     const payload = {
       id: formData.get('id') || '',
-      name: nameValue,
-      price: priceValue,
-      oldPrice: Number(formData.get('oldPrice')) || 0,
+      name: formData.get('name') || '',
+      price: formData.get('price') || 0,
+      oldPrice: formData.get('oldPrice') || 0,
       category: formData.get('category') || 'Essentials',
       collection: formData.get('collection') || 'tees',
       stock: formData.get('stock') || 'In Stock',
@@ -395,15 +378,15 @@ export const initAdminDashboard = async () => {
       image: imageValue || 'assets/products/product1.jpg'
     };
 
-    await upsertProduct(payload);
-    await renderProducts();
-    await renderSummary();
+    upsertProduct(payload);
+    renderProducts();
+    renderSummary();
     populateProductForm();
   });
 
   cancelEditButton?.addEventListener('click', () => populateProductForm());
 
-  select('#product-list')?.addEventListener('click', async (event) => {
+  select('#product-list')?.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     const button = target.closest('[data-action]');
@@ -413,15 +396,14 @@ export const initAdminDashboard = async () => {
     const action = button.dataset.action;
 
     if (action === 'edit-product') {
-      const product = (await getProducts()).find((item) => item.id === productId);
+      const product = getProducts().find((item) => item.id === productId);
       populateProductForm(product);
-      return;
     }
 
     if (action === 'delete-product') {
-      await deleteProduct(productId);
-      await renderProducts();
-      await renderSummary();
+      deleteProduct(productId);
+      renderProducts();
+      renderSummary();
     }
   });
 

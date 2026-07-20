@@ -143,11 +143,11 @@ textarea {
 }
 
 .grid--3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
 .grid--4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .product-card,
@@ -300,11 +300,27 @@ textarea {
   .product-card {
     padding: 1.25rem;
   }
+
+  .product-card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .product-media {
+    width: 100%;
+    aspect-ratio: 1/1;
+  }
 }
 
 @media screen and (min-width: 480px) and (max-width: 767px) {
-  .grid--3,
-  .grid--4,
+  .grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .collection-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -315,6 +331,15 @@ textarea {
 
   .footer-inner {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .product-card {
+    width: 100%;
+  }
+
+  .product-media {
+    width: 100%;
+    aspect-ratio: 1/1;
   }
 }
 
@@ -373,6 +398,25 @@ textarea {
     width: min(1280px, calc(100% - 5rem));
   }
 
+
+/* Additional responsive refinements to ensure premium look across 320-768px */
+@media screen and (max-width: 767px) {
+  html { font-size: 14px; }
+  h1, .hero-title { font-size: clamp(1.6rem, 6vw, 2.4rem); }
+  h2, .section-title { font-size: clamp(1.1rem, 4.2vw, 1.6rem); }
+  .product-title { font-size: clamp(1rem, 3.6vw, 1.1rem); }
+  .product-price { font-size: clamp(.95rem, 3.2vw, 1rem); }
+  .btn, .cta { padding: 0.6rem 0.9rem; font-size: 0.95rem; }
+  .product-media img, .gallery-item img { width: 100%; height: auto; object-fit: cover; }
+  .product-card, .collection-section { padding: 0.9rem; }
+  .hero-art img { max-width: 100%; height: auto; }
+  .site-header .brand img { width: 44px; }
+  .assistant-toggle img { width: 32px; height: 32px; }
+  .admin-shell { padding: 1rem; }
+  .admin-panel { padding: 1rem; }
+  .admin-form input, .admin-form textarea, .admin-form .btn { width: 100%; }
+  .product-body { gap: 0.45rem; }
+}
   .gallery-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
@@ -383,7 +427,40 @@ textarea {
     width: min(1440px, calc(100% - 6rem));
   }
 }
+/* Global mobile polish for public pages */
+@media screen and (max-width: 767px) {
+  html { font-size: 15px; }
+  body { font-size: 0.95rem; }
+  .container { width: calc(100% - 1.25rem); }
+  .site-header { padding: 0.35rem 0; }
+  .header-inner { grid-template-columns: 1fr auto; gap: 0.6rem; }
+  .header-search { display: none; }
+  .brand { min-width: 0; }
+  .brand-name { font-size: 1rem; }
+  .hero-title { font-size: clamp(1.6rem, 7vw, 2.3rem); }
+  .hero-subtitle { font-size: 0.95rem; }
+  .hero-actions, .newsletter-form, .footer-links, .social-links { gap: 0.65rem; }
+  .hero-actions .btn, .newsletter-form .btn, .cta, .btn { width: 100%; justify-content: center; }
+  .section { padding: 3rem 0; }
+  .grid--3, .grid--4, .gallery-grid, .footer-inner, .about-grid, .about-hero-grid, .about-luxury-grid, .about-spotlight, .timeline-grid, .about-metrics, .about-gallery, .checkout-layout, .cart-layout, .wishlist-grid { grid-template-columns: 1fr; }
+  .product-card, .feature-card, .review-card, .gallery-item, .collection-section, .cart-item-card, .form-card, .admin-panel, .admin-list-item { padding: 1rem; }
+  .product-media { aspect-ratio: 4 / 5; }
+  .product-body, .feature-card, .review-card { gap: 0.6rem; }
+  .newsletter-container, .footer-inner { padding: 1.2rem 0; }
+  .footer-col { width: 100%; }
+  .footer-links li { margin-bottom: 0.45rem; }
+}
 
+@media screen and (max-width: 480px) {
+  .container { width: calc(100% - 1rem); }
+  .hero { padding: 2.5rem 0; }
+  .hero-actions { flex-direction: column; }
+  .btn, .cta { min-height: 44px; padding: 0.7rem 0.95rem; }
+  .newsletter-input { min-height: 46px; }
+  .site-header .brand img { width: 44px; }
+  .assistant-toggle { width: 3.2rem; height: 3.2rem; }
+  .assistant-panel { width: min(94vw, 360px); }
+}
 @media screen and (min-width: 2560px) {
   .container {
     width: min(1600px, calc(100% - 6rem));

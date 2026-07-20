@@ -2,8 +2,11 @@ import { PRODUCT_CATALOG, formatCurrency } from './helpers.js';
 
 const STORAGE_KEYS = {
   state: 'bindaud_admin_state',
-  session: 'bindaud_admin_session'
+  session: 'bindaud_admin_session',
+  token: 'bindaud_admin_token'
 };
+
+const API_BASE = '/api/admin';
 
 const ensureString = (value, fallback = '') => (value == null ? fallback : String(value));
 
@@ -22,6 +25,30 @@ const writeStorage = (key, value) => {
   if (typeof window === 'undefined') return;
 
   window.localStorage.setItem(key, JSON.stringify(value));
+};
+
+const syncCatalogSnapshot = (state) => {
+  if (typeof window === 'undefined') return;
+
+  const catalog = Array.isArray(state?.products) ? state.products : [];
+  window.__BINDAUD_PRODUCTS = catalog;
+
+  try {
+    window.dispatchEvent(new CustomEvent('catalog:updated', { detail: catalog }));
+  } catch (error) {
+    console.warn('Catalog sync event failed:', error.message);
+  }
+};
+
+const getToken = () => readStorage(STORAGE_KEYS.token, '');
+
+const setToken = (token) => {
+  writeStorage(STORAGE_KEYS.token, token);
+};
+
+const clearToken = () => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(STORAGE_KEYS.token);
 };
 
 const createInitialProducts = () => PRODUCT_CATALOG.map((product, index) => ({
@@ -95,6 +122,32 @@ const createDefaultState = () => ({
   ]
 });
 
+const requestAdminApi = async (path, options = {}) => {
+  if (typeof window === 'undefined') {
+    throw new Error('Admin API is only available in the browser.');
+  }
+
+  const token = getToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  };
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Admin API request failed');
+  }
+
+  return data;
+};
+
 export const getAdminState = () => {
   const state = readStorage(STORAGE_KEYS.state, null);
 
@@ -120,7 +173,7 @@ export const getAdminState = () => {
       ...(state.settings || {})
     },
     coupons: state.coupons || createDefaultState().coupons,
-    products: state.products || createDefaultState().products,
+    products: state.products || createInitialProducts(),
     orders: state.orders || [],
     activity: state.activity || createDefaultState().activity
   };
@@ -128,6 +181,7 @@ export const getAdminState = () => {
 
 export const saveAdminState = (state) => {
   writeStorage(STORAGE_KEYS.state, state);
+  syncCatalogSnapshot(state);
   return state;
 };
 
@@ -138,7 +192,7 @@ export const saveAdminSession = (session) => {
   return session;
 };
 
-export const authenticateAdmin = (username, password, rememberMe = false) => {
+const localAuthenticateAdmin = (username, password, rememberMe = false) => {
   const state = getAdminState();
   const normalizedUsername = ensureString(username).trim().toLowerCase();
   const normalizedPassword = ensureString(password).trim();
@@ -163,7 +217,36 @@ export const authenticateAdmin = (username, password, rememberMe = false) => {
   return true;
 };
 
+export const authenticateAdmin = async (username, password, rememberMe = false) => {
+  const normalizedUsername = ensureString(username).trim();
+  const normalizedPassword = ensureString(password).trim();
+
+  try {
+    const result = await requestAdminApi('/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: normalizedUsername, password: normalizedPassword })
+    });
+
+    if (result.success && result.token) {
+      setToken(result.token);
+      const session = {
+        loggedIn: true,
+        rememberMe,
+        lastLogin: new Date().toISOString(),
+        username: normalizedUsername
+      };
+      saveAdminSession(session);
+      return true;
+    }
+  } catch (error) {
+    console.warn('Admin API login failed, falling back to local auth:', error.message);
+  }
+
+  return localAuthenticateAdmin(normalizedUsername, normalizedPassword, rememberMe);
+};
+
 export const logoutAdmin = () => {
+  clearToken();
   const state = getAdminState();
   state.session = {
     loggedIn: false,
@@ -175,7 +258,18 @@ export const logoutAdmin = () => {
   saveAdminSession(state.session);
 };
 
-export const getProducts = () => getAdminState().products;
+export const getProducts = async () => {
+  try {
+    const result = await requestAdminApi('/products');
+    if (Array.isArray(result.products)) {
+      return result.products;
+    }
+  } catch (error) {
+    console.warn('Failed to load admin products from API. Using local storage fallback.', error.message);
+  }
+
+  return getAdminState().products;
+};
 
 export const saveProducts = (products) => {
   const state = getAdminState();
@@ -184,11 +278,9 @@ export const saveProducts = (products) => {
   return state.products;
 };
 
-export const upsertProduct = (productData) => {
-  const state = getAdminState();
-  const product = {
+export const upsertProduct = async (productData) => {
+  const payload = {
     ...productData,
-    id: productData.id || `BD-${String(state.products.length + 1).padStart(3, '0')}`,
     price: Number(productData.price) || 0,
     oldPrice: Number(productData.oldPrice) || 0,
     featured: Boolean(productData.featured),
@@ -205,30 +297,73 @@ export const upsertProduct = (productData) => {
     image: ensureString(productData.image, 'assets/products/product1.jpg')
   };
 
-  const existingIndex = state.products.findIndex((item) => item.id === product.id);
+  const localState = getAdminState();
+  const existingIndex = localState.products.findIndex((item) => item.id === payload.id);
+  const isUpdate = Boolean(payload.id && existingIndex >= 0);
+  const endpoint = isUpdate ? `/products/${payload.id}` : '/products';
+  const method = isUpdate ? 'PUT' : 'POST';
 
-  if (existingIndex >= 0) {
-    state.products[existingIndex] = product;
-  } else {
-    state.products.unshift(product);
+  try {
+    const result = await requestAdminApi(endpoint, {
+      method,
+      body: JSON.stringify(payload)
+    });
+
+    const saved = result.product || payload;
+    if (isUpdate) {
+      localState.products[existingIndex] = saved;
+    } else {
+      localState.products.unshift(saved);
+    }
+
+    localState.activity.unshift({
+      id: `activity-product-${Date.now()}`,
+      type: 'product',
+      message: `${saved.name} ${isUpdate ? 'updated' : 'created'} in the admin catalog.`,
+      createdAt: new Date().toISOString()
+    });
+
+    saveAdminState(localState);
+    return saved;
+  } catch (error) {
+    console.warn('Admin API save failed. Using local update fallback.', error.message);
   }
 
-  state.activity.unshift({
+  const localProduct = {
+    ...payload,
+    id: payload.id || `BD-${String(localState.products.length + 1).padStart(3, '0')}`
+  };
+
+  if (existingIndex >= 0) {
+    localState.products[existingIndex] = localProduct;
+  } else {
+    localState.products.unshift(localProduct);
+  }
+
+  localState.activity.unshift({
     id: `activity-product-${Date.now()}`,
     type: 'product',
-    message: `${product.name} ${existingIndex >= 0 ? 'updated' : 'created'} in the admin catalog.`,
+    message: `${localProduct.name} ${existingIndex >= 0 ? 'updated' : 'created'} in the admin catalog.`,
     createdAt: new Date().toISOString()
   });
 
-  saveAdminState(state);
-  return product;
+  saveAdminState(localState);
+  return localProduct;
 };
 
-export const deleteProduct = (productId) => {
+export const deleteProduct = async (productId) => {
   const state = getAdminState();
   const product = state.products.find((item) => item.id === productId);
-  state.products = state.products.filter((item) => item.id !== productId);
 
+  try {
+    await requestAdminApi(`/products/${productId}`, {
+      method: 'DELETE'
+    });
+  } catch (error) {
+    console.warn('Admin API delete failed. Using local fallback.', error.message);
+  }
+
+  state.products = state.products.filter((item) => item.id !== productId);
   state.activity.unshift({
     id: `activity-delete-${Date.now()}`,
     type: 'product',
@@ -238,6 +373,20 @@ export const deleteProduct = (productId) => {
 
   saveAdminState(state);
   return state.products;
+};
+
+export const uploadProductImage = async (file, filename) => {
+  try {
+    const result = await requestAdminApi('/upload', {
+      method: 'POST',
+      body: JSON.stringify({ file, filename })
+    });
+
+    return result.file?.path || filename;
+  } catch (error) {
+    console.warn('Image upload failed. Using local file data.', error.message);
+    return filename;
+  }
 };
 
 export const getOrders = () => getAdminState().orders;

@@ -1,11 +1,11 @@
 :root {
-  --assistant-bg: rgba(15, 23, 36, 0.9);
-  --assistant-surface: rgba(255, 255, 255, 0.12);
-  --assistant-border: rgba(255, 255, 255, 0.16);
-  --assistant-text: #f8fafc;
+  --assistant-bg: rgba(6, 16, 34, 0.88);
+  --assistant-surface: rgba(255, 255, 255, 0.14);
+  --assistant-border: rgba(125, 211, 252, 0.3);
+  --assistant-text: #f8fbff;
   --assistant-muted: #cbd5e1;
-  --assistant-accent: #C39C5E;
-  --assistant-accent-strong: #D8B46A;
+  --assistant-accent: #00d4ff;
+  --assistant-accent-strong: #2f7dff;
 }
 
 .bindaud-assistant-root {
@@ -25,72 +25,70 @@
 }
 
 .assistant-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  max-width: min(280px, calc(100vw - 1.5rem));
-  padding: 0.8rem 1rem;
-  border-radius: 999px;
-  color: var(--assistant-text);
-  background: linear-gradient(135deg, rgba(33, 72, 107, 0.96), rgba(30, 89, 138, 0.96));
-  box-shadow: 0 18px 45px rgba(15, 23, 36, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(1, 14, 30, 0.95), rgba(18, 64, 123, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.16) inset, 0 18px 40px rgba(0, 212, 255, 0.25), 0 10px 24px rgba(18, 64, 123, 0.24);
   backdrop-filter: blur(16px);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+  overflow: hidden;
 }
 
 .assistant-toggle:hover,
 .assistant-toggle.is-open {
-  transform: translateY(-2px);
-  box-shadow: 0 24px 55px rgba(15, 23, 36, 0.3);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.2) inset, 0 22px 50px rgba(0, 212, 255, 0.35), 0 14px 28px rgba(18, 64, 123, 0.3);
 }
 
 .assistant-toggle__logo {
   display: grid;
   place-items: center;
-  width: 2.3rem;
-  height: 2.3rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.2rem;
+}
+
+.assistant-toggle__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  font-family: var(--font-display, 'Montserrat', 'Helvetica Neue', Arial, sans-serif);
-  font-weight: 700;
 }
 
-.assistant-toggle__copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-}
-
-.assistant-toggle__copy strong {
-  font-size: 0.95rem;
-  font-family: var(--font-display, 'Montserrat', 'Helvetica Neue', Arial, sans-serif);
-}
-
-.assistant-toggle__copy small {
-  font-size: 0.75rem;
-  color: #d6f8de;
+.assistant-toggle__glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.35), rgba(47, 125, 255, 0.2));
+  filter: blur(14px);
+  z-index: -1;
+  opacity: 0.8;
 }
 
 .assistant-panel {
   position: absolute;
   right: 0;
-  bottom: calc(100% + 0.75rem);
-  width: min(360px, calc(100vw - 1.5rem));
-  max-height: min(72vh, 620px);
+  bottom: calc(100% + 0.85rem);
+  width: min(380px, calc(100vw - 1.25rem));
+  max-height: min(76vh, 640px);
   display: flex;
   flex-direction: column;
   padding: 1rem;
   border-radius: 1.25rem;
-  background: var(--assistant-bg);
-  border: 1px solid var(--assistant-border);
-  box-shadow: 0 24px 70px rgba(15, 23, 36, 0.3);
-  backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, rgba(8, 18, 39, 0.94), rgba(12, 39, 74, 0.95));
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  box-shadow: 0 20px 60px rgba(0, 19, 38, 0.35);
+  backdrop-filter: blur(20px) saturate(140%);
   opacity: 0;
   pointer-events: none;
   transform: translateY(14px) scale(0.98);
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 220ms ease, transform 220ms ease;
 }
 
 .assistant-panel.is-open {
@@ -124,7 +122,7 @@
   height: 2.2rem;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--assistant-accent), var(--assistant-accent-strong));
-  color: #0f1724;
+  color: #07111d;
   font-family: var(--font-display, 'Montserrat', 'Helvetica Neue', Arial, sans-serif);
   font-weight: 700;
 }
@@ -165,7 +163,7 @@
 
 .assistant-message--user {
   justify-self: end;
-  background: linear-gradient(135deg, rgba(33, 72, 107, 0.9), rgba(30, 89, 138, 0.9));
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.22), rgba(47, 125, 255, 0.22));
 }
 
 .assistant-actions {
@@ -184,7 +182,7 @@
   border-radius: 999px;
   font-size: 0.85rem;
   color: var(--assistant-text);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
@@ -200,8 +198,8 @@
   padding: 0.85rem 0.95rem;
   border-radius: 0.95rem;
   color: var(--assistant-text);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
-  border: 1.5px solid rgba(195, 156, 94, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+  border: 1.5px solid rgba(0, 212, 255, 0.28);
   font-size: 0.92rem;
   transition: all 0.3s ease;
 }
@@ -209,9 +207,9 @@
 .assistant-form input:focus,
 .assistant-form textarea:focus {
   outline: none;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.09));
-  border-color: rgba(195, 156, 94, 0.7);
-  box-shadow: 0 0 16px rgba(195, 156, 94, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12));
+  border-color: rgba(0, 212, 255, 0.55);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.18);
 }
 
 .assistant-form input::placeholder,
@@ -224,20 +222,20 @@
   justify-self: end;
   padding: 0.75rem 1.2rem;
   background: linear-gradient(135deg, var(--assistant-accent), var(--assistant-accent-strong));
-  border: 1px solid rgba(195, 156, 94, 0.5);
-  color: #0f1724;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: #041322;
   border-radius: 0.95rem;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 6px 16px rgba(195, 156, 94, 0.25);
+  box-shadow: 0 10px 22px rgba(0, 212, 255, 0.2);
 }
 
 .assistant-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(195, 156, 94, 0.35);
-  background: linear-gradient(135deg, var(--assistant-accent-strong), #E8C57A);
+  box-shadow: 0 14px 28px rgba(0, 212, 255, 0.3);
+  background: linear-gradient(135deg, var(--assistant-accent-strong), #60a5fa);
 }
 
 .assistant-feedback {
@@ -275,6 +273,11 @@
   .bindaud-assistant-root {
     right: 0.75rem;
     bottom: 0.75rem;
+  }
+
+  .assistant-toggle {
+    width: 3.4rem;
+    height: 3.4rem;
   }
 
   .assistant-panel {

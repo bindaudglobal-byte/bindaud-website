@@ -1,3 +1,5 @@
+import { getAdminState } from './adminStorage.js';
+
 const DEFAULT_API_BASE_URL = 'http://localhost:5000/api';
 
 const buildApiUrl = (path) => {
@@ -34,13 +36,30 @@ export const getProducts = async (params = {}) => {
   });
 
   const queryString = searchParams.toString();
-  const result = await requestJson(`/products${queryString ? `?${queryString}` : ''}`);
-  return result.data || [];
+
+  try {
+    const result = await requestJson(`/products${queryString ? `?${queryString}` : ''}`);
+    return result.data || [];
+  } catch (error) {
+    console.warn('Product API unavailable, falling back to the admin catalog.', error.message);
+  }
+
+  const adminState = getAdminState();
+  const products = Array.isArray(adminState.products) ? adminState.products : [];
+  const limit = Number(params.limit || 0);
+  return limit > 0 ? products.slice(0, limit) : products;
 };
 
 export const getProductById = async (productId) => {
-  const result = await requestJson(`/products/${productId}`);
-  return result.data || null;
+  try {
+    const result = await requestJson(`/products/${productId}`);
+    return result.data || null;
+  } catch (error) {
+    console.warn('Product lookup failed, falling back to the admin catalog.', error.message);
+  }
+
+  const adminState = getAdminState();
+  return (adminState.products || []).find((product) => product.id === productId) || null;
 };
 
 export const normalizeProduct = (product) => {

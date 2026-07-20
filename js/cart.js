@@ -76,12 +76,45 @@ export const initSite = async () => {
 
   window.addEventListener('cart:updated', updateCartBadge, { passive: true });
   window.addEventListener('storage', updateCartBadge, { passive: true });
+  window.addEventListener('catalog:updated', async () => {
+    if (document.querySelector('.shop-products-grid')) {
+      await renderShopPage();
+    }
+
+    if (document.querySelector('.product-details-section')) {
+      await populateProductPage();
+    }
+  }, { passive: true });
 };
 
 export const loadProductCatalog = async () => {
   if (window.__BINDAUD_PRODUCTS?.length) {
-    activeCatalog = window.__BINDAUD_PRODUCTS;
+    activeCatalog = window.__BINDAUD_PRODUCTS.map((product) => normalizeProduct(product));
     return activeCatalog;
+  }
+
+  try {
+    const adminStateRaw = window.localStorage.getItem('bindaud_admin_state');
+    if (adminStateRaw) {
+      const adminState = JSON.parse(adminStateRaw);
+      if (Array.isArray(adminState?.products) && adminState.products.length) {
+        return setCatalog(adminState.products.map(normalizeProduct));
+      }
+    }
+  } catch (error) {
+    console.warn('Admin catalog load failed:', error.message);
+  }
+
+  try {
+    const catalogResponse = await fetch(resolveSitePath('data/products.json'));
+    if (catalogResponse.ok) {
+      const catalogData = await catalogResponse.json();
+      if (Array.isArray(catalogData.products) && catalogData.products.length) {
+        return setCatalog(catalogData.products.map(normalizeProduct));
+      }
+    }
+  } catch (error) {
+    console.warn('Static catalog load failed:', error.message);
   }
 
   try {

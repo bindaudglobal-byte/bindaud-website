@@ -13,6 +13,18 @@ function getBasePath() {
   return window.location.pathname.includes('/pages/') ? '../' : '';
 }
 
+function ensureChatbotStyles() {
+  if (document.querySelector('link[data-chatbot-styles="true"]')) {
+    return;
+  }
+
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = `${getBasePath()}css/chatbot.css`;
+  link.setAttribute('data-chatbot-styles', 'true');
+  document.head.appendChild(link);
+}
+
 function buildRoute(route) {
   const base = getBasePath();
   const routeMap = {
@@ -314,6 +326,19 @@ export function initChatbot() {
     return;
   }
 
+  // Do not initialize chatbot on admin pages or when explicitly disabled
+  try {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    if (window.BIN_DAUD_DISABLE_CHATBOT === true || path.includes('admin-login.html') || path.includes('admin-dashboard.html')) {
+      return;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  ensureChatbotStyles();
+
+  // single, consistent initialization
   assistantRoot = createElement('div', 'bindaud-assistant-root');
   assistantRoot.id = 'bindaud-assistant-root';
 
@@ -321,12 +346,13 @@ export function initChatbot() {
   const toggleButton = createElement('button', 'assistant-toggle');
   toggleButton.type = 'button';
   toggleButton.setAttribute('aria-expanded', 'false');
+  toggleButton.setAttribute('aria-label', 'Open BIN DAUD assistant');
+  const logoSrc = `${getBasePath()}assets/icons/bindaud-agent.png`;
   toggleButton.innerHTML = `
-    <span class="assistant-toggle__logo">B</span>
-    <span class="assistant-toggle__copy">
-      <strong>${getConfig().businessName || 'BIN DAUD'} Assistant</strong>
-      <small>🟢 Online</small>
+    <span class="assistant-toggle__logo">
+      <img src="${logoSrc}" alt="BIN DAUD AI Assistant" onerror="this.onerror=null; this.src='${getBasePath()}assets/icons/empty-cart.svg';">
     </span>
+    <span class="assistant-toggle__glow"></span>
   `;
 
   const panel = createElement('div', 'assistant-panel');

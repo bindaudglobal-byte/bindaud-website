@@ -1,0 +1,38 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Dragon Collection Oversized Tee",
+      "code": "BD-001",
+      "price": 3999,
+      "oldPrice": 4999,
+      "description": "Premium oversized tee inspired by Japanese dragon motifs. Crafted from 100% organic cotton with signature BIN DAUD embroidery.",
+      "category": "tees",
+      "collection": "dragon",
+      "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
+      "colors": ["Black", "White", "Navy"],
+      "stock": 50,
+      "featured": true,
+      "trending": true,
+      "bestSeller": true,
+      "imagePath": "assets/products/product1.jpg"
+    },
+    {
+      "id": 2,
+      "name": "Minimalist Kimono Jacket",
+      "code": "BD-002",
+      "price": 8999,
+      "oldPrice": 10999,
+      "description": "Lightweight kimono-inspired jacket perfect for layering. Premium Japanese fabric with hand-stitched details.",
+      "category": "jackets",
+      "collection": "crane",
+      "sizes": ["S", "M", "L", "XL"],
+      "colors": ["Black", "Beige"],
+      "stock": 25,
+      "featured": true,
+      "trending": false,
+      "bestSeller": true,
+      "imagePath": "assets/products/product2.jpg"
+    }
+  ]
+}

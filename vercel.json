@@ -1,0 +1,25 @@
+{
+  "buildCommand": "cd backend && npm install && cd .. && echo 'Frontend ready'",
+  "devCommand": "echo 'Use npm start'",
+  "installCommand": "cd backend && npm install",
+  "framework": "static",
+  "functions": {
+    "backend/server.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "env": {
+    "NODE_ENV": "production",
+    "ADMIN_TOKEN": "admin-token-2026"
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/backend/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}

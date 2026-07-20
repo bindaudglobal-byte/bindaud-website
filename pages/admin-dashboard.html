@@ -15,6 +15,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+        <script>
+            // Prevent chatbot from initializing or remove any existing assistant markup on admin pages
+            window.BIN_DAUD_DISABLE_CHATBOT = true;
+            try { document.addEventListener('DOMContentLoaded', () => { const e = document.getElementById('bindaud-assistant-root'); if (e) e.remove(); }); } catch (e) {}
+        </script>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/responsive.css">
     <link rel="stylesheet" href="../css/animation.css">
@@ -231,9 +236,18 @@
         </section>
     </main>
 
-    <script type="module" src="../js/adminApp.js"></script>
-<script src="../js/config.js"></script>
-<script type="module" src="../js/app.js"></script>
+    <script>
+        window.__adminBootstrapPromise = import('../js/adminDashboard.js?v=' + Date.now()).then(({ initAdminDashboard }) => {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => initAdminDashboard(), { once: true });
+            } else {
+                initAdminDashboard();
+            }
+        }).catch((error) => {
+            console.error('Admin bootstrap failed', error);
+        });
+    </script>
+    <script src="../js/config.js"></script>
 </body>
 
 </html>
