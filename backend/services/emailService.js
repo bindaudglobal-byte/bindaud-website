@@ -1,19 +1,21 @@
 const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
+const host = process.env.EMAIL_HOST || process.env.SMTP_HOST;
+const port = Number(process.env.EMAIL_PORT || process.env.SMTP_PORT || 587);
+const user = process.env.EMAIL_USER || process.env.SMTP_USER;
+const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT || 587),
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
+  host,
+  port,
+  secure: port === 465,
+  auth: user && pass ? { user, pass } : undefined,
 });
 
 const sendMail = async ({ to, subject, html }) => {
-  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    logger.warn('Email service is not configured. Skipping notification.');
+  if (!host || !user || !pass) {
+    logger.warn('Email service is not configured (EMAIL_* or SMTP_* env missing). Skipping notification.');
     return { success: true, skipped: true };
   }
 

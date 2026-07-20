@@ -1,3 +1,5 @@
+require('dotenv').config({ path: require('path').resolve(__dirname, '..', '.env') });
+
 const getEnv = (key, fallback = undefined) => {
   const value = process.env[key];
   if (value === undefined || value === null || value === '') {

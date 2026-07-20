@@ -63,6 +63,12 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      index: { unique: true, sparse: true },
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -72,5 +78,8 @@ const productSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Text index for search performance
+productSchema.index({ name: 'text', description: 'text', collectionName: 'text' });
 
 module.exports = mongoose.model('Product', productSchema);

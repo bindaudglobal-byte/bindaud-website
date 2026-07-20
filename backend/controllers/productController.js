@@ -94,6 +94,21 @@ const createProduct = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
 
+    // Prevent obvious duplicates by code or (name + category)
+    if (req.body.code) {
+      const existingByCode = await Product.findOne({ code: req.body.code.trim().toUpperCase() });
+      if (existingByCode) {
+        return res.status(409).json({ success: false, message: 'Product with this code already exists' });
+      }
+    }
+
+    if (req.body.name) {
+      const existingByName = await Product.findOne({ name: req.body.name.trim(), category: req.body.category });
+      if (existingByName) {
+        return res.status(409).json({ success: false, message: 'A product with this name already exists in the selected category' });
+      }
+    }
+
     const images = [];
     if (req.files?.images) {
       for (const file of req.files.images) {
@@ -108,7 +123,7 @@ const createProduct = async (req, res, next) => {
       video = { url: result.secure_url, publicId: result.public_id };
     }
 
-    const product = await Product.create({
+    const productPayload = {
       name: req.body.name,
       description: req.body.description,
       price: Number(req.body.price),
@@ -124,10 +139,17 @@ const createProduct = async (req, res, next) => {
       bestSeller: req.body.bestSeller === 'true' || req.body.bestSeller === true,
       collectionName: req.body.collection || '',
       isActive: req.body.isActive !== 'false',
-    });
+    };
+
+    if (req.body.code) productPayload.code = req.body.code.trim().toUpperCase();
+
+    const product = await Product.create(productPayload);
 
     res.status(201).json({ success: true, data: product });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, message: 'Duplicate product detected' });
+    }
     next(error);
   }
 };
@@ -170,9 +192,16 @@ const updateProduct = async (req, res, next) => {
       isActive: req.body.isActive !== undefined ? req.body.isActive !== 'false' : product.isActive,
     });
 
+    if (req.body.code) {
+      product.code = req.body.code.trim().toUpperCase();
+    }
+
     await product.save();
     res.json({ success: true, data: product });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, message: 'Duplicate product detected' });
+    }
     next(error);
   }
 };
