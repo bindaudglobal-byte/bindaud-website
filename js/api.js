@@ -1,12 +1,13 @@
 import { getAdminState } from './adminStorage.js';
+import { resolveSitePath } from './helpers.js';
 
-const DEFAULT_API_BASE_URL = 'http://localhost:5000/api';
+const DEFAULT_API_BASE_URL = window.BINDAUD_CONFIG?.apiBaseUrl || window.__BINDAUD_API_URL || '';
 
 const buildApiUrl = (path) => {
-  const configuredBase = window.BINDAUD_CONFIG?.apiBaseUrl || window.__BINDAUD_API_URL || DEFAULT_API_BASE_URL;
+  const configuredBase = DEFAULT_API_BASE_URL;
   const normalizedBase = configuredBase.endsWith('/') ? configuredBase.slice(0, -1) : configuredBase;
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${normalizedBase}${normalizedPath}`;
+  return normalizedBase ? `${normalizedBase}${normalizedPath}` : normalizedPath;
 };
 
 const requestJson = async (path, options = {}) => {
@@ -41,13 +42,27 @@ export const getProducts = async (params = {}) => {
     const result = await requestJson(`/products${queryString ? `?${queryString}` : ''}`);
     return result.data || [];
   } catch (error) {
-    console.warn('Product API unavailable, falling back to the admin catalog.', error.message);
+    console.warn('Product API unavailable, falling back to local data.', error.message);
   }
 
   const adminState = getAdminState();
-  const products = Array.isArray(adminState.products) ? adminState.products : [];
-  const limit = Number(params.limit || 0);
-  return limit > 0 ? products.slice(0, limit) : products;
+  if (Array.isArray(adminState.products) && adminState.products.length) {
+    const products = adminState.products;
+    const limit = Number(params.limit || 0);
+    return limit > 0 ? products.slice(0, limit) : products;
+  }
+
+  try {
+    const response = await fetch(resolveSitePath('data/products.json'));
+    if (response.ok) {
+      const catalogData = await response.json();
+      return Array.isArray(catalogData.products) ? catalogData.products : [];
+    }
+  } catch (staticError) {
+    console.warn('Static product catalog load failed:', staticError.message);
+  }
+
+  return [];
 };
 
 export const getProductById = async (productId) => {
@@ -55,11 +70,26 @@ export const getProductById = async (productId) => {
     const result = await requestJson(`/products/${productId}`);
     return result.data || null;
   } catch (error) {
-    console.warn('Product lookup failed, falling back to the admin catalog.', error.message);
+    console.warn('Product lookup failed, falling back to local data.', error.message);
   }
 
   const adminState = getAdminState();
-  return (adminState.products || []).find((product) => product.id === productId) || null;
+  const localProduct = (adminState.products || []).find((product) => product.id === productId);
+  if (localProduct) {
+    return localProduct;
+  }
+
+  try {
+    const response = await fetch(resolveSitePath('data/products.json'));
+    if (response.ok) {
+      const catalogData = await response.json();
+      return (catalogData.products || []).find((product) => product.id === productId) || null;
+    }
+  } catch (staticError) {
+    console.warn('Static product lookup failed:', staticError.message);
+  }
+
+  return null;
 };
 
 export const normalizeProduct = (product) => {

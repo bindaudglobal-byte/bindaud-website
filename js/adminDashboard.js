@@ -20,6 +20,81 @@ import {
 import { resolveSitePath } from './helpers.js';
 
 const select = (selector, parent = document) => parent.querySelector(selector);
+const selectAll = (selector, parent = document) => parent.querySelectorAll(selector);
+
+// Image preview and validation
+const handleImagePreview = (fileInput) => {
+  const preview = fileInput.parentElement.querySelector('.image-preview');
+  const file = fileInput.files?.[0];
+
+  if (!file) {
+    if (preview) preview.remove();
+    return;
+  }
+
+  // Validate image file
+  if (!file.type.startsWith('image/')) {
+    alert('Please select a valid image file');
+    fileInput.value = '';
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Image must be smaller than 5MB');
+    fileInput.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let existingPreview = fileInput.parentElement.querySelector('.image-preview');
+    if (!existingPreview) {
+      existingPreview = document.createElement('div');
+      existingPreview.className = 'image-preview';
+      fileInput.parentElement.insertBefore(existingPreview, fileInput.nextSibling);
+    }
+    existingPreview.innerHTML = `
+      <img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 0.5rem; margin-top: 0.5rem;">
+      <p style="font-size: 0.85rem; color: #666; margin-top: 0.3rem;">${(file.size / 1024).toFixed(2)} KB</p>
+    `;
+  };
+  reader.readAsDataURL(file);
+};
+
+// Data export/import for cross-device sync
+const exportAdminData = () => {
+  const state = window.localStorage.getItem('bindaud_admin_state');
+  if (!state) {
+    alert('No data to export');
+    return;
+  }
+
+  const dataStr = JSON.stringify(JSON.parse(state), null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `bindaud-admin-backup-${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+const importAdminData = async (file) => {
+  if (!file || !file.type.includes('json')) {
+    alert('Please select a valid JSON file');
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    window.localStorage.setItem('bindaud_admin_state', JSON.stringify(data));
+    alert('Data imported successfully! Reloading...');
+    window.location.reload();
+  } catch (error) {
+    alert(`Import failed: ${error.message}`);
+  }
+};
 
 const renderSummary = async () => {
   const orders = getOrders();
@@ -114,6 +189,19 @@ const populateProductForm = (product = null) => {
   select('#trending-toggle', form).checked = Boolean(product?.trending);
   select('#best-seller-toggle', form).checked = Boolean(product?.bestSeller);
   select('#product-image-file', form).value = '';
+
+  // Remove existing image preview
+  const preview = form.querySelector('.image-preview');
+  if (preview) preview.remove();
+
+  // Show current product image if editing
+  if (product?.image && !product.image.startsWith('data:')) {
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'image-preview';
+    previewDiv.innerHTML = `<img src="${resolveSitePath(product.image)}" alt="${product.name}" style="max-width: 200px; max-height: 150px; border-radius: 0.5rem; margin-top: 0.5rem;">`;
+    select('#product-image-file', form).parentElement.insertBefore(previewDiv, select('#product-image-file', form).nextSibling);
+  }
+
   select('#product-form-submit', form).textContent = product ? 'Update Product' : 'Add Product';
 };
 
@@ -130,7 +218,9 @@ const renderProducts = async () => {
   list.innerHTML = products.map((product) => `
     <article class="admin-list-item admin-product-card">
       <div class="admin-product-hero">
-        <img src="${resolveSitePath(product.image)}" alt="${product.name}" loading="lazy">
+        <div class="product-image-wrapper">
+          <img src="${product.image && product.image.startsWith('data:') ? product.image : resolveSitePath(product.image)}" alt="${product.name}" loading="lazy" onerror="this.src='assets/products/product1.jpg'">
+        </div>
         <div>
           <strong>${product.name}</strong>
           <p>${product.code} • ${product.category}</p>
@@ -139,7 +229,7 @@ const renderProducts = async () => {
       </div>
       <div class="admin-product-meta">
         <span>${formatAdminCurrency(product.price)}</span>
-        <span>${product.stock}</span>
+        <span class="stock-badge ${product.stock === 'In Stock' ? 'in-stock' : 'low-stock'}">${product.stock}</span>
       </div>
       <div class="admin-product-actions">
         <button type="button" class="btn btn-ghost btn-sm" data-action="edit-product" data-id="${product.id}">Edit</button>
@@ -306,7 +396,6 @@ export const initAdminLogin = () => {
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    console.log('initAdminLogin: submit handler fired');
     const formData = new FormData(form);
     const username = formData.get('username') || '';
     const password = formData.get('password') || '';
@@ -314,7 +403,6 @@ export const initAdminLogin = () => {
 
     try {
       const success = await authenticateAdmin(username, password, rememberMe);
-      console.log('initAdminLogin: authenticateAdmin result ->', success);
       if (success) {
         window.location.href = '/pages/admin-dashboard.html';
       } else {
@@ -322,7 +410,7 @@ export const initAdminLogin = () => {
         if (error) error.textContent = 'Username or password is incorrect.';
       }
     } catch (e) {
-      console.error('initAdminLogin: authentication error', e);
+      console.error('Admin login error', e);
       const error = select('#login-error');
       if (error) error.textContent = 'Authentication error. Check console.';
     }
@@ -342,8 +430,25 @@ export const initAdminDashboard = async () => {
     window.location.href = 'admin-login.html';
   });
 
+  // Data management
+  const exportBtn = select('#export-data-btn');
+  const importBtn = select('#import-data-btn');
+  const importFile = select('#import-data-file');
+
+  exportBtn?.addEventListener('click', exportAdminData);
+  importBtn?.addEventListener('click', () => importFile?.click());
+  importFile?.addEventListener('change', (e) => {
+    if (e.target.files?.[0]) {
+      importAdminData(e.target.files[0]);
+    }
+  });
+
   const productForm = select('#product-form');
   const cancelEditButton = select('#cancel-product-edit');
+  const imageInput = select('#product-image-file');
+
+  // Image preview listener
+  imageInput?.addEventListener('change', (e) => handleImagePreview(e.target));
 
   await renderSummary();
   renderRecentOrders();
@@ -395,10 +500,15 @@ export const initAdminDashboard = async () => {
       image: imageValue || 'assets/products/product1.jpg'
     };
 
-    await upsertProduct(payload);
-    await renderProducts();
-    await renderSummary();
-    populateProductForm();
+    try {
+      await upsertProduct(payload);
+      await renderProducts();
+      await renderSummary();
+      populateProductForm();
+      alert(`Product ${payload.id ? 'updated' : 'added'} successfully!`);
+    } catch (error) {
+      alert(`Error saving product: ${error.message}`);
+    }
   });
 
   cancelEditButton?.addEventListener('click', () => populateProductForm());
@@ -415,13 +525,16 @@ export const initAdminDashboard = async () => {
     if (action === 'edit-product') {
       const product = (await getProducts()).find((item) => item.id === productId);
       populateProductForm(product);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     if (action === 'delete-product') {
-      await deleteProduct(productId);
-      await renderProducts();
-      await renderSummary();
+      if (confirm('Are you sure you want to delete this product?')) {
+        await deleteProduct(productId);
+        await renderProducts();
+        await renderSummary();
+      }
     }
   });
 
@@ -455,6 +568,7 @@ export const initAdminDashboard = async () => {
       expressShipping: Boolean(formData.get('expressShipping'))
     };
     saveDeliverySettings(settings);
+    alert('Delivery settings saved!');
   });
 
   select('#coupon-form')?.addEventListener('submit', (event) => {
@@ -467,9 +581,15 @@ export const initAdminDashboard = async () => {
       usageLimit: formData.get('usageLimit') || 0
     };
 
+    if (!coupon.code) {
+      alert('Please enter a coupon code');
+      return;
+    }
+
     createCoupon(coupon);
     renderCoupons();
     event.currentTarget.reset();
+    alert('Coupon created successfully!');
   });
 
   select('#coupon-list')?.addEventListener('click', (event) => {
@@ -478,8 +598,10 @@ export const initAdminDashboard = async () => {
     const button = target.closest('[data-action="delete-coupon"]');
     if (!button) return;
 
-    deleteCoupon(button.dataset.id);
-    renderCoupons();
+    if (confirm('Delete this coupon?')) {
+      deleteCoupon(button.dataset.id);
+      renderCoupons();
+    }
   });
 
   select('#website-settings-form')?.addEventListener('submit', (event) => {
@@ -497,6 +619,7 @@ export const initAdminDashboard = async () => {
       shipping: formData.get('shipping') || ''
     };
     saveWebsiteSettings(settings);
+    alert('Website settings saved!');
   });
 
   window.addEventListener('storage', () => {

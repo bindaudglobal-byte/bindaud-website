@@ -416,6 +416,7 @@ textarea {
   .admin-panel { padding: 1rem; }
   .admin-form input, .admin-form textarea, .admin-form .btn { width: 100%; }
   .product-body { gap: 0.45rem; }
+  .header-search { display: block; width: 100%; margin: 0.5rem 0; }
 }
   .gallery-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr));

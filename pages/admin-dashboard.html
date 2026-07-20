@@ -23,8 +23,9 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/responsive.css">
     <link rel="stylesheet" href="../css/animation.css">
-<link rel="stylesheet" href="../css/cursor.css">
-<link rel="stylesheet" href="../css/interactions.css">
+    <link rel="stylesheet" href="../css/cursor.css">
+    <link rel="stylesheet" href="../css/interactions.css">
+    <link rel="stylesheet" href="../css/admin.css">
 </head>
 
 <body class="bd-body">
@@ -36,6 +37,9 @@
             </a>
             <div class="admin-toolbar">
                 <a href="../index.html" class="btn btn-ghost btn-sm">View Store</a>
+                <button id="export-data-btn" type="button" class="btn btn-ghost btn-sm" title="Export admin data as JSON">Export Data</button>
+                <button id="import-data-btn" type="button" class="btn btn-ghost btn-sm" title="Import admin data from JSON">Import Data</button>
+                <input type="file" id="import-data-file" accept=".json" style="display:none;">
                 <button id="admin-logout" type="button" class="btn btn-primary btn-sm">Logout</button>
             </div>
         </div>

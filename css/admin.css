@@ -1,0 +1,429 @@
+/* Admin Panel Enhanced Styles */
+
+.admin-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 44px;
+}
+
+.admin-toolbar button,
+.admin-toolbar a {
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+/* Image Preview */
+.image-preview {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: rgba(33, 72, 107, 0.04);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(33, 72, 107, 0.08);
+}
+
+.image-preview img {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 0.5rem;
+  display: block;
+}
+
+.image-preview p {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.3rem;
+}
+
+/* Product Card Improvements */
+.admin-product-card {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.admin-product-hero {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.product-image-wrapper {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.product-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-product-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.stock-badge {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.stock-badge.in-stock {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.stock-badge.low-stock {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.admin-product-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Form Improvements */
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.admin-field-full {
+  grid-column: 1 / -1;
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.admin-field span {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #214b6b;
+}
+
+.admin-field input,
+.admin-field textarea,
+.admin-field select {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.admin-field input:focus,
+.admin-field textarea:focus,
+.admin-field select:focus {
+  outline: none;
+  border-color: #214b6b;
+  box-shadow: 0 0 0 3px rgba(33, 72, 107, 0.1);
+}
+
+.admin-checkbox-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 1rem 0;
+}
+
+.admin-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.admin-checkbox input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.admin-actions-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.admin-actions-row .btn {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Order Table Responsive */
+.admin-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.admin-table thead {
+  background: #f5f5f5;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.95rem;
+}
+
+.admin-table th {
+  font-weight: 600;
+  color: #214b6b;
+}
+
+.admin-inline-actions {
+  min-width: 150px;
+}
+
+.admin-inline-actions select {
+  width: 100%;
+}
+
+/* Mobile Responsive Admin */
+@media screen and (max-width: 767px) {
+  .admin-toolbar {
+    gap: 0.5rem;
+  }
+
+  .admin-toolbar button,
+  .admin-toolbar a {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    min-height: 40px;
+  }
+
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .admin-product-card {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .admin-product-hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .product-image-wrapper {
+    width: 120px;
+    height: 120px;
+  }
+
+  .admin-product-meta {
+    text-align: center;
+    align-items: center;
+  }
+
+  .admin-product-actions {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+
+  .admin-checkbox-row {
+    gap: 1rem;
+  }
+
+  .admin-actions-row {
+    flex-direction: column;
+  }
+
+  .admin-actions-row .btn {
+    width: 100%;
+  }
+
+  .admin-table-wrap {
+    font-size: 0.9rem;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .admin-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .admin-toolbar {
+    gap: 0.4rem;
+  }
+
+  .admin-toolbar button,
+  .admin-toolbar a {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+    min-height: 38px;
+  }
+
+  .admin-field input,
+  .admin-field textarea,
+  .admin-field select {
+    padding: 0.6rem;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+
+  .admin-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .admin-card {
+    padding: 1rem;
+  }
+
+  .admin-product-card {
+    gap: 0.5rem;
+  }
+
+  .product-image-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Search Bar Mobile Fix */
+.admin-toolbar-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-toolbar-row input,
+.admin-toolbar-row select {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+.admin-toolbar-row input:focus,
+.admin-toolbar-row select:focus {
+  outline: none;
+  border-color: #214b6b;
+}
+
+@media screen and (max-width: 767px) {
+  .admin-toolbar-row {
+    gap: 0.5rem;
+    flex-direction: column;
+  }
+
+  .admin-toolbar-row input,
+  .admin-toolbar-row select {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .collection-search {
+    width: 100% !important;
+  }
+}
+
+/* Better visibility on public pages */
+.header-search {
+  width: min(100%, 420px);
+  min-width: 0;
+  margin: 0 auto;
+}
+
+@media screen and (max-width: 767px) {
+  .header-search {
+    width: 100%;
+    display: block !important;
+    order: 3;
+    margin: 0.5rem 0;
+  }
+
+  .header-inner {
+    grid-template-columns: 1fr auto auto;
+    gap: 0.5rem;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .header-search {
+    display: none;
+  }
+}
+
+/* Data management buttons */
+#export-data-btn,
+#import-data-btn {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Alert styles for success messages */
+.admin-alert {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.admin-alert.success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #4caf50;
+}
+
+.admin-alert.error {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #f44336;
+}
