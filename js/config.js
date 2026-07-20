@@ -9,5 +9,14 @@ window.BINDAUD_CONFIG = {
   shipping: 'Free shipping across Pakistan on qualifying orders.',
   cod: 'Cash on delivery is available for supported regions.',
   businessHours: 'Mon - Sat • 10:00 AM - 8:00 PM',
-  currency: 'PKR'
+  currency: 'PKR',
+  api: {
+    adminBase: '',
+    // Example: 'https://your-backend-domain.com/api/admin'
+    supabaseUrl: '',
+    supabaseAnonKey: '',
+    // Example: 'https://your-supabase-project-url.supabase.co'
+    googleSheetsEndpoint: ''
+    // Example: 'https://script.google.com/macros/s/your-script-id/exec'
+  }
 };

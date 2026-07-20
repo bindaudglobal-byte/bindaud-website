@@ -8,6 +8,7 @@ import {
   getCoupons,
   getDeliverySettings,
   getOrders,
+  getOrdersAsync,
   getProducts,
   getWebsiteSettings,
   logoutAdmin,
@@ -39,7 +40,12 @@ const selectAll = (selector, parent = document) => parent.querySelectorAll(selec
 let sizeSelector, colorPicker, imageUploader;
 let categoryDropdown, collectionDropdown, brandDropdown, genderDropdown;
 let materialDropdown, fitDropdown, seasonDropdown, stockDropdown;
+let conditionDropdown, availabilityDropdown, visibilityDropdown;
 let currentEditingProduct = null;
+let selectedProductIds = new Set();
+let productPage = 1;
+const PRODUCTS_PER_PAGE = 8;
+const PRODUCT_DRAFT_KEY = 'bindaud_admin_product_draft';
 
 // Initialize component dropdowns
 const initializeDropdowns = () => {
@@ -50,6 +56,8 @@ const initializeDropdowns = () => {
   const fits = ['Oversized', 'Regular', 'Slim', 'Relaxed', 'Athletic'];
   const seasons = ['All Year', 'Summer', 'Winter', 'Spring', 'Fall'];
   const stocks = ['In Stock', 'Low Stock', 'Out of Stock'];
+  const conditions = ['New', 'Used', 'Refurbished'];
+  const availability = ['Available', 'Unavailable', 'Preorder'];
 
   categoryDropdown = new SearchableDropdown(
     'category-dropdown',
@@ -120,6 +128,26 @@ const initializeDropdowns = () => {
       select('#product-stock').setAttribute('data-value', value);
     }
   );
+
+  conditionDropdown = new SearchableDropdown(
+    'condition-dropdown',
+    conditions,
+    'Select condition',
+    (value) => {
+      select('#product-condition').value = value;
+      select('#product-condition').setAttribute('data-value', value);
+    }
+  );
+
+  availabilityDropdown = new SearchableDropdown(
+    'availability-dropdown',
+    availability,
+    'Select availability',
+    (value) => {
+      select('#product-availability').value = value;
+      select('#product-availability').setAttribute('data-value', value);
+    }
+  );
 };
 
 // Initialize interactive components
@@ -131,9 +159,15 @@ const initializeComponents = () => {
   colorPicker = new ColorPicker('color-picker', []);
 
   // Image uploader
-  imageUploader = new ImageUploader('product-image-uploader', (file, dataUrl) => {
-    if (dataUrl) {
-      select('input[name="imagePath"]').value = dataUrl;
+  imageUploader = new ImageUploader('product-image-uploader', (images) => {
+    const imagePathInput = select('input[name="imagePath"]');
+    const imageListInput = select('#product-images');
+    const coverImage = images.find((item) => item.isCover) || images[0] || null;
+    if (imagePathInput) {
+      imagePathInput.value = coverImage?.url || 'assets/products/product1.jpg';
+    }
+    if (imageListInput) {
+      imageListInput.value = JSON.stringify(images);
     }
   });
 
@@ -191,9 +225,307 @@ const importAdminData = async (file) => {
   }
 };
 
+const saveProductDraft = () => {
+  const form = select('#product-form');
+  if (!form) return;
+  const draft = {
+    name: select('#product-name', form).value,
+    code: select('#product-code', form).value,
+    price: select('#product-price', form).value,
+    oldPrice: select('#product-old-price', form).value,
+    brand: select('#product-brand', form).value,
+    description: select('#product-description', form).value,
+    features: select('#product-features', form).value,
+    tags: select('#product-tags', form).value,
+    category: select('#product-category', form).value,
+    collection: select('#product-collection', form).value,
+    stock: select('#product-stock', form).value,
+    gender: select('#product-gender', form).value,
+    material: select('#product-material', form).value,
+    fit: select('#product-fit', form).value,
+    season: select('#product-season', form).value,
+    quantity: select('#product-quantity', form).value,
+    visibility: select('#product-visibility', form).value,
+    condition: select('#product-condition', form).value,
+    availability: select('#product-availability', form).value,
+    seoTitle: select('#product-seo-title', form).value,
+    metaDescription: select('#product-meta-description', form).value,
+    slug: select('#product-slug', form).value,
+    ogImage: select('#product-og-image', form).value,
+    featured: select('#featured-toggle', form).checked,
+    trending: select('#trending-toggle', form).checked,
+    bestSeller: select('#best-seller-toggle', form).checked,
+    newArrival: select('#new-arrival-toggle', form).checked,
+    sale: select('#sale-toggle', form).checked,
+    sizes: sizeSelector?.getValue() || [],
+    colors: colorPicker?.getValue() || [],
+    images: imageUploader?.getValue() || []
+  };
+
+  window.localStorage.setItem(PRODUCT_DRAFT_KEY, JSON.stringify(draft));
+};
+
+const loadProductDraft = () => {
+  const raw = window.localStorage.getItem(PRODUCT_DRAFT_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+const clearProductDraft = () => {
+  window.localStorage.removeItem(PRODUCT_DRAFT_KEY);
+};
+
+const generateSlugFromName = (name) => {
+  return String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+};
+
+const getFilteredOrders = () => {
+  const orders = getOrders();
+  const searchValue = (select('#orders-search')?.value || '').trim().toLowerCase();
+  const statusValue = select('#orders-status-filter')?.value || 'all';
+  const sortValue = select('#orders-sort')?.value || 'newest';
+  let filtered = [...orders];
+
+  if (searchValue) {
+    filtered = filtered.filter((order) =>
+      `${order.customerName || ''} ${order.city || ''} ${order.phone || ''}`.toLowerCase().includes(searchValue)
+    );
+  }
+
+  if (statusValue !== 'all') {
+    filtered = filtered.filter((order) => order.status === statusValue);
+  }
+
+  if (sortValue === 'highest') {
+    filtered.sort((a, b) => (Number(b.total) || 0) - (Number(a.total) || 0));
+  } else {
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  return filtered;
+};
+
+const exportOrdersToCsv = () => {
+  const orders = getFilteredOrders();
+  if (!orders.length) {
+    Notifier.info('No orders available to export.');
+    return;
+  }
+
+  const headers = ['Customer', 'Phone', 'Address', 'City', 'Products', 'Total', 'Status', 'Created At'];
+  const rows = orders.map((order) => {
+    const products = (order.products || []).map((item) => `${item.name} x ${item.quantity || 1}`).join('; ');
+    return [
+      order.customerName || '',
+      order.phone || '',
+      order.address || '',
+      order.city || '',
+      products,
+      formatAdminCurrency(order.total),
+      order.status || '',
+      order.createdAt ? new Date(order.createdAt).toLocaleString() : ''
+    ];
+  });
+
+  const csvContent = [headers, ...rows]
+    .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `bindaud-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+
+  Notifier.success('Orders exported as a spreadsheet file.');
+};
+
+const exportProductsToCsv = async () => {
+  const products = await getProducts();
+  if (!products.length) {
+    Notifier.info('No products available to export.');
+    return;
+  }
+
+  const headers = ['ID', 'Name', 'SKU', 'Category', 'Collection', 'Price', 'Old Price', 'Stock', 'Quantity', 'Visibility', 'Condition', 'Availability', 'Tags', 'Sizes', 'Colors', 'Slug', 'Barcode', 'Featured', 'Best Seller', 'New Arrival', 'Sale', 'Description', 'Images'];
+  const rows = products.map((product) => [
+    product.id || '',
+    product.name || '',
+    product.code || '',
+    product.category || '',
+    product.collection || '',
+    product.price || 0,
+    product.oldPrice || 0,
+    product.stock || '',
+    product.quantity || 0,
+    product.visibility || 'Public',
+    product.condition || 'New',
+    product.availability || 'Available',
+    (product.tags || []).join('|'),
+    (product.sizeOptions || product.sizes || []).join('|'),
+    (product.colorOptions || product.colors || []).join('|'),
+    product.slug || '',
+    product.barcode || '',
+    product.featured ? 'Yes' : 'No',
+    product.bestSeller ? 'Yes' : 'No',
+    product.newArrival ? 'Yes' : 'No',
+    product.sale ? 'Yes' : 'No',
+    product.description || '',
+    (product.images || []).map((img) => img.url).join('|')
+  ]);
+
+  const csvContent = [headers, ...rows]
+    .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `bindaud-products-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  Notifier.success('Products exported as CSV.');
+};
+
+const exportProductsToExcel = async () => {
+  const products = await getProducts();
+  if (!products.length) {
+    Notifier.info('No products available to export.');
+    return;
+  }
+
+  const htmlRows = products.map((product) => `
+    <tr>
+      <td>${product.id || ''}</td>
+      <td>${product.name || ''}</td>
+      <td>${product.code || ''}</td>
+      <td>${product.category || ''}</td>
+      <td>${product.collection || ''}</td>
+      <td>${product.price || ''}</td>
+      <td>${product.oldPrice || ''}</td>
+      <td>${product.stock || ''}</td>
+      <td>${product.quantity || ''}</td>
+      <td>${product.visibility || ''}</td>
+      <td>${product.condition || ''}</td>
+      <td>${product.availability || ''}</td>
+      <td>${(product.tags || []).join(', ')}</td>
+      <td>${(product.sizeOptions || product.sizes || []).join(', ')}</td>
+      <td>${(product.colorOptions || product.colors || []).join(', ')}</td>
+      <td>${product.slug || ''}</td>
+      <td>${product.barcode || ''}</td>
+      <td>${product.featured ? 'Yes' : ''}</td>
+      <td>${product.bestSeller ? 'Yes' : ''}</td>
+      <td>${product.newArrival ? 'Yes' : ''}</td>
+      <td>${product.sale ? 'Yes' : ''}</td>
+      <td>${product.description || ''}</td>
+      <td>${(product.images || []).map((img) => img.url).join(' | ')}</td>
+    </tr>
+  `).join('');
+
+  const html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="UTF-8">
+      </head>
+      <body>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Name</th><th>SKU</th><th>Category</th><th>Collection</th><th>Price</th><th>Old Price</th><th>Stock</th><th>Quantity</th><th>Visibility</th><th>Condition</th><th>Availability</th><th>Tags</th><th>Sizes</th><th>Colors</th><th>Slug</th><th>Barcode</th><th>Featured</th><th>Best Seller</th><th>New Arrival</th><th>Sale</th><th>Description</th><th>Images</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${htmlRows}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `;
+
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `bindaud-products-${new Date().toISOString().slice(0, 10)}.xls`;
+  link.click();
+  URL.revokeObjectURL(url);
+  Notifier.success('Products exported as Excel.');
+};
+
+const importProductsFromCsv = async (file) => {
+  if (!file) {
+    Notifier.error('Please choose a valid CSV file');
+    return;
+  }
+
+  LoadingIndicator.show('Importing products...');
+
+  try {
+    const text = await file.text();
+    const rows = text.trim().split(/\r?\n/).filter(Boolean);
+    const [header, ...lines] = rows;
+    const columns = header.split(',').map((cell) => cell.replace(/"/g, '').trim());
+
+    const imported = lines.map((line) => {
+      const values = line.split(',').map((cell) => cell.replace(/"/g, '').trim());
+      const item = columns.reduce((acc, column, index) => {
+        acc[column] = values[index] || '';
+        return acc;
+      }, {});
+      return {
+        id: item.ID || createProductId(),
+        name: item.Name || 'Imported Product',
+        code: item.SKU || '',
+        category: item.Category || 'Essentials',
+        collection: item.Collection || 'tees',
+        price: Number(item.Price) || 0,
+        oldPrice: Number(item['Old Price']) || 0,
+        stock: item.Stock || 'In Stock',
+        quantity: Number(item.Quantity) || 0,
+        visibility: item.Visibility || 'Public',
+        condition: item.Condition || 'New',
+        availability: item.Availability || 'Available',
+        tags: item.Tags ? item.Tags.split('|').map((value) => value.trim()).filter(Boolean) : [],
+        sizeOptions: item.Sizes ? item.Sizes.split('|').map((value) => value.trim()).filter(Boolean) : [],
+        colorOptions: item.Colors ? item.Colors.split('|').map((value) => value.trim()).filter(Boolean) : [],
+        slug: item.Slug || generateSlugFromName(item.Name),
+        barcode: item.Barcode || '',
+        featured: item.Featured === 'Yes',
+        bestSeller: item['Best Seller'] === 'Yes',
+        newArrival: item['New Arrival'] === 'Yes',
+        sale: item.Sale === 'Yes',
+        description: item.Description || '',
+        images: item.Images ? item.Images.split('|').map((url) => ({ id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, url: url.trim(), name: url.trim(), isCover: false })) : []
+      };
+    });
+
+    const state = getAdminState();
+    state.products = [...imported, ...state.products];
+    saveAdminState(state);
+    await renderProducts();
+    Notifier.success('Products imported successfully.');
+  } catch (error) {
+    Notifier.error(`Product import failed: ${error.message}`);
+  } finally {
+    LoadingIndicator.hide();
+  }
+};
+
 // Render functions (existing)
 const renderSummary = async () => {
-  const orders = getOrders();
+  const orders = await getOrdersAsync();
   const products = await getProducts();
   const summaryCards = select('#summary-cards');
   if (!summaryCards) return;
@@ -241,8 +573,8 @@ const renderSummary = async () => {
   `;
 };
 
-const renderRecentOrders = () => {
-  const orders = getOrders();
+const renderRecentOrders = async () => {
+  const orders = await getOrdersAsync();
   const container = select('#recent-orders-list');
   if (!container) return;
 
@@ -292,36 +624,37 @@ const populateProductForm = (product = null) => {
   fitDropdown?.setValue(product?.fit || 'Regular');
   seasonDropdown?.setValue(product?.season || 'All Year');
   stockDropdown?.setValue(product?.stock || 'In Stock');
+  conditionDropdown?.setValue(product?.condition || 'New');
+  availabilityDropdown?.setValue(product?.availability || 'Available');
+  visibilityDropdown?.setValue(product?.visibility || 'Public');
 
   // Size and color selectors
-  sizeSelector?.setValue(product?.sizeOptions || []);
-  colorPicker?.setValue(product?.colorOptions || []);
+  sizeSelector?.setValue(product?.sizeOptions || product?.sizes || []);
+  colorPicker?.setValue(product?.colorOptions || product?.colors || []);
 
   // Checkboxes
   select('#featured-toggle', form).checked = Boolean(product?.featured);
   select('#trending-toggle', form).checked = Boolean(product?.trending);
   select('#best-seller-toggle', form).checked = Boolean(product?.bestSeller);
+  select('#new-arrival-toggle', form).checked = Boolean(product?.newArrival);
+  select('#sale-toggle', form).checked = Boolean(product?.sale);
+  select('#visibility-toggle', form).checked = Boolean(product?.visibility === 'Hidden');
+
+  // SEO fields
+  select('#product-seo-title', form).value = product?.seoTitle || '';
+  select('#product-meta-description', form).value = product?.metaDescription || '';
+  select('#product-slug', form).value = product?.slug || '';
+  select('#product-barcode', form).value = product?.barcode || '';
+  select('#product-og-image', form).value = product?.ogImage || '';
 
   // Image uploader
   imageUploader?.clear();
-  if (product?.image) {
-    const imageUrl = product.image.startsWith('data:')
-      ? product.image
-      : resolveSitePath(product.image);
-    
-    // Show preview for existing image
-    const previewContainer = select('.preview-container', imageUploader?.container);
-    if (previewContainer) {
-      previewContainer.innerHTML = `
-        <div class="preview-item">
-          <img src="${imageUrl}" alt="${product.name}">
-          <div class="preview-info">
-            <p class="preview-name">${product.name}</p>
-            <p class="preview-size">Existing image</p>
-          </div>
-        </div>
-      `;
-    }
+  const imagesToLoad = (product?.images && Array.isArray(product.images) && product.images.length)
+    ? product.images
+    : product?.image ? [{ url: product.image, name: `${product.name || 'Product'} cover`, isCover: true }] : [];
+
+  if (imagesToLoad.length) {
+    imageUploader?.loadImages(imagesToLoad);
   }
 
   // Update button text
@@ -334,17 +667,69 @@ const populateProductForm = (product = null) => {
     duplicateBtn.style.display = product ? '' : 'none';
   }
 
-  // Auto-generate SKU if new product
-  if (!product) {
-    select('#auto-sku-btn', form)?.addEventListener('click', (e) => {
-      e.preventDefault();
-      const name = select('#product-name', form).value;
-      const category = categoryDropdown?.getValue() || 'Product';
-      const sku = SKUGenerator.generate(name, category);
-      select('#product-code', form).value = sku;
-      Notifier.success(`SKU generated: ${sku}`);
-    });
+};
+
+const getFilteredProducts = (products) => {
+  const searchValue = (select('#product-search')?.value || '').trim().toLowerCase();
+  const categoryValue = select('#product-category-filter')?.value || 'all';
+  const stockValue = select('#product-stock-filter')?.value || 'all';
+  const visibilityValue = select('#product-visibility-filter')?.value || 'all';
+  let filtered = [...products];
+
+  if (searchValue) {
+    filtered = filtered.filter((product) =>
+      `${product.name || ''} ${product.code || ''} ${product.category || ''} ${product.collection || ''} ${(product.tags || []).join(' ')}`
+        .toLowerCase()
+        .includes(searchValue)
+    );
   }
+
+  if (categoryValue !== 'all') {
+    filtered = filtered.filter((product) => product.category === categoryValue);
+  }
+
+  if (stockValue !== 'all') {
+    filtered = filtered.filter((product) => product.stock === stockValue);
+  }
+
+  if (visibilityValue !== 'all') {
+    filtered = filtered.filter((product) => product.visibility === visibilityValue);
+  }
+
+  filtered.sort((a, b) => {
+    const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+    const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+    return dateB - dateA;
+  });
+
+  return filtered;
+};
+
+const renderProductPagination = (totalPages, currentPage) => {
+  const pagination = select('#product-pagination');
+  if (!pagination) return;
+
+  if (totalPages <= 1) {
+    pagination.innerHTML = '';
+    return;
+  }
+
+  pagination.innerHTML = `
+    <div class="pagination-controls">
+      <button type="button" class="btn btn-ghost btn-sm" id="product-page-prev" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+      <span class="pagination-summary">Page ${currentPage} of ${totalPages}</span>
+      <button type="button" class="btn btn-ghost btn-sm" id="product-page-next" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+    </div>
+  `;
+};
+
+const updateProductBulkUI = () => {
+  const bulkActions = select('#product-bulk-actions');
+  const bulkCount = select('#product-bulk-count');
+  if (!bulkActions || !bulkCount) return;
+  const count = selectedProductIds.size;
+  bulkCount.textContent = `${count} product${count === 1 ? '' : 's'} selected`;
+  bulkActions.style.display = count ? 'flex' : 'none';
 };
 
 const renderProducts = async () => {
@@ -354,35 +739,66 @@ const renderProducts = async () => {
 
   if (!products.length) {
     list.innerHTML = '<p class="admin-empty">No products available.</p>';
+    renderProductPagination(0, 1);
+    updateProductBulkUI();
     return;
   }
 
-  list.innerHTML = products.map((product) => `
-    <article class="admin-list-item admin-product-card">
-      <div class="admin-product-hero">
-        <div class="product-image-wrapper">
-          <img src="${product.image && product.image.startsWith('data:') ? product.image : resolveSitePath(product.image)}" alt="${product.name}" loading="lazy" onerror="this.src='assets/products/product1.jpg'">
+  const filteredProducts = getFilteredProducts(products);
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+  productPage = Math.min(productPage, totalPages);
+  const startIndex = (productPage - 1) * PRODUCTS_PER_PAGE;
+  const pageProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+
+  if (!pageProducts.length) {
+    list.innerHTML = '<p class="admin-empty">No matching products found.</p>';
+    renderProductPagination(totalPages, productPage);
+    updateProductBulkUI();
+    return;
+  }
+
+  list.innerHTML = pageProducts.map((product) => {
+    const imageUrl = product.images?.find((img) => img.isCover)?.url || product.image || product.images?.[0]?.url || 'assets/products/product1.jpg';
+    const coverUrl = imageUrl.startsWith('data:') ? imageUrl : resolveSitePath(imageUrl);
+    const tags = (product.tags || []).slice(0, 5).join(', ');
+
+    return `
+      <article class="admin-list-item admin-product-card">
+        <label class="admin-checkbox product-select">
+          <input type="checkbox" data-product-select data-id="${product.id}" ${selectedProductIds.has(product.id) ? 'checked' : ''}>
+        </label>
+        <div class="admin-product-hero">
+          <div class="product-image-wrapper">
+            <img src="${coverUrl}" alt="${product.name}" loading="lazy" onerror="this.src='assets/products/product1.jpg'">
+          </div>
+          <div>
+            <strong>${product.name}</strong>
+            <p>${product.code || ''} • ${product.category || ''}</p>
+            <p>${product.collection || ''}</p>
+            <p class="admin-product-tags">${tags}</p>
+          </div>
         </div>
-        <div>
-          <strong>${product.name}</strong>
-          <p>${product.code} • ${product.category}</p>
-          <p>${product.collection}</p>
+        <div class="admin-product-meta">
+          <span>${formatAdminCurrency(product.price)}</span>
+          <span class="stock-badge ${product.stock === 'In Stock' ? 'in-stock' : 'low-stock'}">${product.stock}</span>
+          <span class="stock-badge ${product.visibility === 'Public' ? 'in-stock' : 'low-stock'}">${product.visibility || 'Public'}</span>
         </div>
-      </div>
-      <div class="admin-product-meta">
-        <span>${formatAdminCurrency(product.price)}</span>
-        <span class="stock-badge ${product.stock === 'In Stock' ? 'in-stock' : 'low-stock'}">${product.stock}</span>
-      </div>
-      <div class="admin-product-actions">
-        <button type="button" class="btn btn-ghost btn-sm" data-action="edit-product" data-id="${product.id}">Edit</button>
-        <button type="button" class="btn btn-primary btn-sm" data-action="delete-product" data-id="${product.id}">Delete</button>
-      </div>
-    </article>
-  `).join('');
+        <div class="admin-product-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-action="quick-edit" data-id="${product.id}">Quick Edit</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-action="copy-link" data-id="${product.id}" data-slug="${product.slug || ''}">Copy Link</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-action="edit-product" data-id="${product.id}">Edit</button>
+          <button type="button" class="btn btn-danger btn-sm" data-action="delete-product" data-id="${product.id}">Delete</button>
+        </div>
+      </article>
+    `;
+  }).join('');
+
+  renderProductPagination(totalPages, productPage);
+  updateProductBulkUI();
 };
 
-const renderOrders = () => {
-  const orders = getOrders();
+const renderOrders = async () => {
+  const orders = await getOrdersAsync();
   const tableBody = select('#orders-table-body');
   const searchInput = select('#orders-search');
   const statusFilter = select('#orders-status-filter');
@@ -624,6 +1040,12 @@ export const initAdminDashboard = async () => {
         return;
       }
 
+      const images = imageUploader?.getValue() || [];
+      const coverImage = images.find((item) => item.isCover) || images[0];
+      const visibilityState = select('#visibility-toggle')?.checked ? 'Hidden' : 'Public';
+      const slugValue = select('#product-slug')?.value || generateSlugFromName(nameValue);
+      const barcodeValue = select('#product-barcode')?.value || '';
+
       const payload = {
         id: formData.get('id') || '',
         name: nameValue,
@@ -640,14 +1062,25 @@ export const initAdminDashboard = async () => {
         sizeOptions: sizeSelector?.getValue() || [],
         colorOptions: colorPicker?.getValue() || [],
         description: formData.get('description') || '',
-        features: (formData.get('features') || '').split(',').map(f => f.trim()).filter(Boolean),
-        tags: (formData.get('tags') || '').split(',').map(t => t.trim()).filter(Boolean),
+        features: (formData.get('features') || '').split(',').map((f) => f.trim()).filter(Boolean),
+        tags: (formData.get('tags') || '').split(',').map((t) => t.trim()).filter(Boolean),
         code: formData.get('code') || '',
         quantity: Number(formData.get('quantity')) || 0,
         featured: Boolean(formData.get('featured')),
         trending: Boolean(formData.get('trending')),
         bestSeller: Boolean(formData.get('bestSeller')),
-        image: imageValue
+        newArrival: Boolean(formData.get('newArrival')),
+        sale: Boolean(formData.get('sale')),
+        visibility: visibilityState,
+        condition: select('#product-condition')?.value || 'New',
+        availability: select('#product-availability')?.value || 'Available',
+        seoTitle: formData.get('seoTitle') || '',
+        metaDescription: formData.get('metaDescription') || '',
+        slug: slugValue,
+        barcode: barcodeValue,
+        ogImage: formData.get('ogImage') || '',
+        images,
+        image: coverImage?.url || imageValue
       };
 
       await upsertProduct(payload);
@@ -702,6 +1135,24 @@ export const initAdminDashboard = async () => {
       }
     }
 
+    if (action === 'quick-edit' && productId) {
+      const products = await getProducts();
+      const product = products.find((p) => p.id === productId);
+      if (product) {
+        populateProductForm(product);
+        Notifier.info('Quick edit mode activated.');
+      }
+    }
+
+    if (action === 'copy-link' && productId) {
+      const slug = event.target.dataset.slug || '';
+      const url = slug
+        ? `${window.location.origin}/pages/product.html?slug=${encodeURIComponent(slug)}`
+        : `${window.location.origin}/pages/product.html?id=${encodeURIComponent(productId)}`;
+      await navigator.clipboard.writeText(url);
+      Notifier.success('Product link copied to clipboard.');
+    }
+
     if (action === 'delete-product' && productId) {
       const confirmed = await ConfirmDialog.show(
         'Delete Product',
@@ -714,9 +1165,24 @@ export const initAdminDashboard = async () => {
         LoadingIndicator.show('Deleting product...');
         await deleteProduct(productId);
         LoadingIndicator.hide();
+        selectedProductIds.delete(productId);
         Notifier.success('Product deleted successfully!');
         await renderProducts();
         await renderSummary();
+      }
+    }
+
+    if (event.target.id === 'product-page-prev' || event.target.id === 'product-page-next') {
+      const products = await getProducts();
+      const filteredProducts = getFilteredProducts(products);
+      const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+      if (event.target.id === 'product-page-prev' && productPage > 1) {
+        productPage -= 1;
+        renderProducts();
+      }
+      if (event.target.id === 'product-page-next' && productPage < totalPages) {
+        productPage += 1;
+        renderProducts();
       }
     }
 
@@ -740,18 +1206,97 @@ export const initAdminDashboard = async () => {
   const ordersSearch = select('#orders-search');
   const ordersStatusFilter = select('#orders-status-filter');
   const ordersSort = select('#orders-sort');
+  const exportOrdersButton = select('#export-orders-btn');
+  const productSearch = select('#product-search');
+  const productCategoryFilter = select('#product-category-filter');
+  const productStockFilter = select('#product-stock-filter');
+  const productVisibilityFilter = select('#product-visibility-filter');
+  const exportProductsCsvBtn = select('#export-products-csv');
+  const exportProductsExcelBtn = select('#export-products-excel');
+  const importProductsBtn = select('#import-products-btn');
+  const importProductsFile = select('#import-products-file');
+  const deleteSelectedProductsBtn = select('#delete-selected-products');
 
   ordersSearch?.addEventListener('input', renderOrders);
   ordersStatusFilter?.addEventListener('change', renderOrders);
   ordersSort?.addEventListener('change', renderOrders);
+  exportOrdersButton?.addEventListener('click', exportOrdersToCsv);
 
-  // Order status update
-  document.addEventListener('change', (event) => {
+  productSearch?.addEventListener('input', () => { productPage = 1; renderProducts(); });
+  productCategoryFilter?.addEventListener('change', () => { productPage = 1; renderProducts(); });
+  productStockFilter?.addEventListener('change', () => { productPage = 1; renderProducts(); });
+  productVisibilityFilter?.addEventListener('change', () => { productPage = 1; renderProducts(); });
+  exportProductsCsvBtn?.addEventListener('click', exportProductsToCsv);
+  exportProductsExcelBtn?.addEventListener('click', exportProductsToExcel);
+  importProductsBtn?.addEventListener('click', () => importProductsFile?.click());
+  importProductsFile?.addEventListener('change', async (e) => {
+    if (e.target.files?.[0]) {
+      await importProductsFromCsv(e.target.files[0]);
+    }
+  });
+  deleteSelectedProductsBtn?.addEventListener('click', async () => {
+    if (!selectedProductIds.size) return;
+    const confirmed = await ConfirmDialog.show(
+      'Delete Selected Products',
+      `Delete ${selectedProductIds.size} selected product${selectedProductIds.size === 1 ? '' : 's'}?`,
+      'Delete',
+      'Cancel'
+    );
+    if (!confirmed) return;
+
+    LoadingIndicator.show('Deleting selected products...');
+    await Promise.all(Array.from(selectedProductIds).map((id) => deleteProduct(id)));
+    selectedProductIds.clear();
+    LoadingIndicator.hide();
+    Notifier.success('Selected products deleted.');
+    await renderProducts();
+    await renderSummary();
+  });
+
+  // Order status update and product pagination/select handlers
+  document.addEventListener('change', async (event) => {
     const orderStatusSelect = event.target.getAttribute('data-order-status');
     if (orderStatusSelect) {
       const newStatus = event.target.value;
       updateOrderStatus(orderStatusSelect, newStatus);
       Notifier.success('Order status updated!');
+      return;
+    }
+
+    const productCheckbox = event.target.closest('[data-product-select]');
+    if (productCheckbox && event.target.type === 'checkbox') {
+      const productId = event.target.dataset.id;
+      if (productId) {
+        if (event.target.checked) {
+          selectedProductIds.add(productId);
+        } else {
+          selectedProductIds.delete(productId);
+        }
+        updateProductBulkUI();
+      }
+      return;
+    }
+
+    if (event.target.id === 'product-page-prev') {
+      const products = await getProducts();
+      const filteredProducts = getFilteredProducts(products);
+      const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+      if (productPage > 1) {
+        productPage -= 1;
+        renderProducts();
+      }
+      return;
+    }
+
+    if (event.target.id === 'product-page-next') {
+      const products = await getProducts();
+      const filteredProducts = getFilteredProducts(products);
+      const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+      if (productPage < totalPages) {
+        productPage += 1;
+        renderProducts();
+      }
+      return;
     }
   });
 

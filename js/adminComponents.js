@@ -225,32 +225,34 @@ export class SearchableDropdown {
 
 // Drag & Drop Image Uploader
 export class ImageUploader {
-  constructor(containerId, onImageSelect = null) {
+  constructor(containerId, onImagesChange = null) {
     this.container = document.getElementById(containerId);
-    this.onImageSelect = onImageSelect;
-    this.selectedFile = null;
+    this.onImagesChange = onImagesChange;
+    this.images = [];
     this.render();
   }
 
   render() {
     if (!this.container) return;
-    
+
     this.container.innerHTML = `
       <div class="image-uploader">
-        <input 
-          type="file" 
-          class="uploader-input" 
-          accept="image/*"
-          hidden
-        >
-        <div class="uploader-zone">
+        <input type="file" class="uploader-input" accept="image/*" multiple hidden>
+        <div class="uploader-zone" tabindex="0" role="button" aria-label="Upload product images">
           <svg class="uploader-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="17 8 12 3 7 8"></polyline>
             <line x1="12" y1="3" x2="12" y2="15"></line>
           </svg>
-          <p class="uploader-title">Drag and drop image or click to browse</p>
-          <p class="uploader-hint">Max 5MB • JPG, PNG, GIF, WebP</p>
+          <p class="uploader-title">Drag and drop images or click to browse</p>
+          <p class="uploader-hint">Upload multiple files, paste URLs, reorder covers, and preview thumbnails.</p>
+        </div>
+        <div class="uploader-controls">
+          <div class="uploader-url-field">
+            <input type="url" class="uploader-url-input" placeholder="Paste image URL and press Add">
+            <button type="button" class="btn btn-ghost btn-sm uploader-add-url">Add</button>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm uploader-clear-all">Clear All</button>
         </div>
         <div class="preview-container"></div>
       </div>
@@ -258,100 +260,212 @@ export class ImageUploader {
 
     const input = this.container.querySelector('.uploader-input');
     const zone = this.container.querySelector('.uploader-zone');
-    const preview = this.container.querySelector('.preview-container');
+    const addUrl = this.container.querySelector('.uploader-add-url');
+    const urlInput = this.container.querySelector('.uploader-url-input');
+    const clearAll = this.container.querySelector('.uploader-clear-all');
 
-    // Click to upload
     zone.addEventListener('click', () => input.click());
-
-    // Drag and drop
     zone.addEventListener('dragover', (e) => {
       e.preventDefault();
       zone.classList.add('drag-active');
     });
-
     zone.addEventListener('dragleave', () => {
       zone.classList.remove('drag-active');
     });
-
     zone.addEventListener('drop', (e) => {
       e.preventDefault();
       zone.classList.remove('drag-active');
-      const files = e.dataTransfer.files;
-      if (files.length) this.handleFile(files[0]);
+      const files = Array.from(e.dataTransfer.files || []);
+      if (files.length) this.handleFiles(files);
     });
 
-    // File input change
     input.addEventListener('change', (e) => {
-      if (e.target.files.length) this.handleFile(e.target.files[0]);
+      if (e.target.files.length) this.handleFiles(Array.from(e.target.files));
+    });
+
+    addUrl.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      if (!url) return;
+      this.addImageUrl(url);
+      urlInput.value = '';
+    });
+
+    clearAll.addEventListener('click', () => this.clear());
+
+    this.renderPreview();
+  }
+
+  handleFiles(files) {
+    files.forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        this.showError('Please select a valid image file');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        this.showError('Image must be smaller than 5MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.addImage({
+          id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          url: e.target.result,
+          name: file.name,
+          size: file.size,
+          isCover: this.images.length === 0
+        });
+      };
+      reader.readAsDataURL(file);
     });
   }
 
-  handleFile(file) {
-    // Validate
-    if (!file.type.startsWith('image/')) {
-      this.showError('Please select a valid image file');
+  addImageUrl(url) {
+    const validUrl = /^https?:\/\/.+$/i.test(url);
+    if (!validUrl) {
+      this.showError('Please enter a valid image URL');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      this.showError('Image must be smaller than 5MB');
-      return;
-    }
-
-    this.selectedFile = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      this.showPreview(e.target.result, file);
-      this.onImageSelect?.(file, e.target.result);
-    };
-    reader.readAsDataURL(file);
+    this.addImage({
+      id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      url,
+      name: url.split('/').pop() || 'image.jpg',
+      size: 0,
+      isCover: this.images.length === 0
+    });
   }
 
-  showPreview(dataUrl, file) {
+  addImage(image) {
+    this.images.push(image);
+    if (!this.images.some((item) => item.isCover)) {
+      this.images[0].isCover = true;
+    }
+    this.renderPreview();
+    this.onImagesChange?.(this.getValue());
+  }
+
+  renderPreview() {
     const preview = this.container.querySelector('.preview-container');
     const zone = this.container.querySelector('.uploader-zone');
-    
-    zone.style.display = 'none';
-    preview.innerHTML = `
-      <div class="preview-item">
-        <img src="${dataUrl}" alt="Preview">
-        <div class="preview-info">
-          <p class="preview-name">${file.name}</p>
-          <p class="preview-size">${(file.size / 1024).toFixed(2)} KB</p>
-        </div>
-        <button type="button" class="preview-remove" title="Remove image">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-    `;
+    if (!preview || !zone) return;
 
-    preview.querySelector('.preview-remove').addEventListener('click', (e) => {
-      e.preventDefault();
-      this.selectedFile = null;
-      preview.innerHTML = '';
-      zone.style.display = '';
-      this.onImageSelect?.(null, null);
+    zone.style.display = this.images.length ? 'none' : '';
+    preview.innerHTML = this.images.length
+      ? this.images.map((image, index) => `
+        <div class="preview-item" draggable="true" data-id="${image.id}">
+          <div class="preview-thumbnail">
+            <img src="${image.url}" alt="Product image ${index + 1}" loading="lazy">
+          </div>
+          <div class="preview-info">
+            <p class="preview-name">${image.name}</p>
+            <p class="preview-size">${image.size ? `${(image.size / 1024).toFixed(1)} KB` : 'URL image'}</p>
+            <div class="preview-actions">
+              <button type="button" class="btn btn-ghost btn-sm preview-cover-btn" data-action="cover" title="Set cover image">${image.isCover ? 'Cover ✓' : 'Set Cover'}</button>
+              <button type="button" class="btn btn-ghost btn-sm preview-remove-btn" data-action="remove" title="Remove image">Remove</button>
+            </div>
+          </div>
+        </div>
+      `).join('')
+      : '';
+
+    preview.querySelectorAll('.preview-remove-btn').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        const item = event.target.closest('.preview-item');
+        this.removeImage(item?.dataset.id);
+      });
     });
+
+    preview.querySelectorAll('.preview-cover-btn').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        const item = event.target.closest('.preview-item');
+        this.selectCover(item?.dataset.id);
+      });
+    });
+
+    this.setupSorting(preview);
+  }
+
+  setupSorting(container) {
+    container.querySelectorAll('.preview-item').forEach((item) => {
+      item.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', item.dataset.id);
+        item.classList.add('dragging');
+      });
+      item.addEventListener('dragend', () => item.classList.remove('dragging'));
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        item.classList.add('drag-over');
+      });
+      item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        item.classList.remove('drag-over');
+        const sourceId = e.dataTransfer.getData('text/plain');
+        const targetId = item.dataset.id;
+        this.reorderImages(sourceId, targetId);
+      });
+    });
+  }
+
+  reorderImages(sourceId, targetId) {
+    const sourceIndex = this.images.findIndex((image) => image.id === sourceId);
+    const targetIndex = this.images.findIndex((image) => image.id === targetId);
+    if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return;
+    const [moved] = this.images.splice(sourceIndex, 1);
+    this.images.splice(targetIndex, 0, moved);
+    this.renderPreview();
+    this.onImagesChange?.(this.getValue());
+  }
+
+  selectCover(id) {
+    this.images = this.images.map((image) => ({
+      ...image,
+      isCover: image.id === id
+    }));
+    this.renderPreview();
+    this.onImagesChange?.(this.getValue());
+  }
+
+  removeImage(id) {
+    this.images = this.images.filter((image) => image.id !== id);
+    if (!this.images.some((image) => image.isCover) && this.images.length) {
+      this.images[0].isCover = true;
+    }
+    this.renderPreview();
+    this.onImagesChange?.(this.getValue());
   }
 
   showError(message) {
     const preview = this.container.querySelector('.preview-container');
-    preview.innerHTML = `<p class="preview-error">${message}</p>`;
+    if (preview) preview.innerHTML = `<p class="preview-error">${message}</p>`;
+  }
+
+  getValue() {
+    return [...this.images];
   }
 
   getFile() {
-    return this.selectedFile;
+    return this.images[0] ?? null;
+  }
+
+  loadImages(images = []) {
+    if (!Array.isArray(images)) return;
+    this.images = images.map((image, index) => ({
+      id: image.id || `img-${Date.now()}-${index}`,
+      url: String(image.url || image.image || '').trim(),
+      name: String(image.name || `Image ${index + 1}`).trim(),
+      size: Number(image.size) || 0,
+      isCover: Boolean(image.isCover) || index === 0
+    })).filter((item) => item.url);
+    this.renderPreview();
   }
 
   clear() {
-    this.selectedFile = null;
-    const zone = this.container.querySelector('.uploader-zone');
-    const preview = this.container.querySelector('.preview-container');
-    preview.innerHTML = '';
-    zone.style.display = '';
+    this.images = [];
+    this.renderPreview();
+    this.onImagesChange?.(this.getValue());
   }
 }
 

@@ -38,6 +38,7 @@
             </a>
             <div class="admin-toolbar">
                 <a href="../index.html" class="btn btn-ghost btn-sm">View Store</a>
+                <button id="toggle-theme-btn" type="button" class="btn btn-ghost btn-sm" title="Toggle dark mode">🌙 Dark Mode</button>
                 <button id="export-data-btn" type="button" class="btn btn-ghost btn-sm" title="Export admin data as JSON">Export Data</button>
                 <button id="import-data-btn" type="button" class="btn btn-ghost btn-sm" title="Import admin data from JSON">Import Data</button>
                 <input type="file" id="import-data-file" accept=".json" style="display:none;">
@@ -62,6 +63,30 @@
                         <div class="admin-panel-head">
                             <h2>Product Manager</h2>
                         </div>
+                        <div class="admin-toolbar-row">
+                            <input type="search" id="product-search" class="collection-search" placeholder="Search products...">
+                            <select id="product-category-filter" class="collection-sort">
+                                <option value="all">All categories</option>
+                                <option value="Essentials">Essentials</option>
+                                <option value="Premium">Premium</option>
+                                <option value="Limited">Limited</option>
+                            </select>
+                            <select id="product-stock-filter" class="collection-sort">
+                                <option value="all">All stock statuses</option>
+                                <option value="In Stock">In Stock</option>
+                                <option value="Low Stock">Low Stock</option>
+                                <option value="Out of Stock">Out of Stock</option>
+                            </select>
+                            <select id="product-visibility-filter" class="collection-sort">
+                                <option value="all">All visibility</option>
+                                <option value="Public">Public</option>
+                                <option value="Hidden">Hidden</option>
+                            </select>
+                            <button type="button" id="export-products-csv" class="btn btn-ghost btn-sm">Export CSV</button>
+                            <button type="button" id="export-products-excel" class="btn btn-ghost btn-sm">Export Excel</button>
+                            <button type="button" id="import-products-btn" class="btn btn-ghost btn-sm">Import Products</button>
+                            <input type="file" id="import-products-file" accept=".csv,.xlsx" style="display:none;">
+                        </div>
                         <form id="product-form" class="admin-form-grid">
                             <input type="hidden" name="id" id="product-id">
                             <input type="hidden" name="category" id="product-category" value="Essentials">
@@ -71,6 +96,15 @@
                             <input type="hidden" name="material" id="product-material" value="Cotton">
                             <input type="hidden" name="fit" id="product-fit" value="Regular">
                             <input type="hidden" name="season" id="product-season" value="All Year">
+                            <input type="hidden" name="visibility" id="product-visibility" value="Public">
+                            <input type="hidden" name="condition" id="product-condition" value="New">
+                            <input type="hidden" name="availability" id="product-availability" value="Available">
+                            <input type="hidden" name="sale" id="product-sale" value="false">
+                            <input type="hidden" name="newArrival" id="product-new-arrival" value="false">
+                            <input type="hidden" name="slug" id="product-slug">
+                            <input type="hidden" name="barcode" id="product-barcode">
+                            <input type="hidden" name="ogImage" id="product-og-image">
+                            <input type="hidden" name="images" id="product-images">
                             
                             <!-- Product Basic Info -->
                             <div class="admin-form-section">
@@ -181,6 +215,16 @@
                                 </label>
 
                                 <label class="admin-field">
+                                    <span class="admin-field-label">Condition</span>
+                                    <div id="condition-dropdown"></div>
+                                </label>
+
+                                <label class="admin-field">
+                                    <span class="admin-field-label">Availability</span>
+                                    <div id="availability-dropdown"></div>
+                                </label>
+
+                                <label class="admin-field">
                                     <span class="admin-field-label">Stock Quantity</span>
                                     <input type="number" name="quantity" id="product-quantity" min="0" value="0">
                                 </label>
@@ -193,6 +237,27 @@
                                 <label class="admin-field admin-field-full">
                                     <span class="admin-field-label">Description</span>
                                     <textarea name="description" id="product-description" rows="4" placeholder="Enter product description..."></textarea>
+                                </label>
+
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">SEO Title</span>
+                                    <input type="text" name="seoTitle" id="product-seo-title" placeholder="Page title for search engines">
+                                </label>
+
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">Meta Description</span>
+                                    <textarea name="metaDescription" id="product-meta-description" rows="2" placeholder="Meta description for search engines..."></textarea>
+                                </label>
+
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">URL Slug</span>
+                                    <input type="text" name="slug" id="product-slug" placeholder="auto-generated from name">
+                                    <p class="admin-field-hint">Editable friendly URL slug for the product page.</p>
+                                </label>
+
+                                <label class="admin-field admin-field-full">
+                                    <span class="admin-field-label">Open Graph Image</span>
+                                    <input type="text" name="ogImage" id="product-og-image" placeholder="Paste image URL for social shares">
                                 </label>
 
                                 <label class="admin-field admin-field-full">
@@ -237,7 +302,12 @@
                                 <button type="button" id="cancel-product-edit" class="btn btn-ghost">Cancel</button>
                             </div>
                         </form>
+                        <div id="product-bulk-actions" class="admin-toolbar-row" style="display:none; justify-content:space-between; margin-top: 1rem;">
+                            <span id="product-bulk-count">0 products selected</span>
+                            <button type="button" id="delete-selected-products" class="btn btn-ghost btn-sm">Delete Selected</button>
+                        </div>
                         <div id="product-list" class="admin-list"></div>
+                        <div id="product-pagination" class="admin-toolbar-row" style="justify-content:flex-end;"></div>
                     </section>
 
                     <section class="admin-panel">
@@ -257,6 +327,7 @@
                                 <option value="newest">Newest</option>
                                 <option value="highest">Highest Total</option>
                             </select>
+                            <button type="button" id="export-orders-btn" class="btn btn-ghost btn-sm" title="Export orders as spreadsheet">Export Orders</button>
                         </div>
                         <div class="admin-table-wrap">
                             <table class="admin-table">

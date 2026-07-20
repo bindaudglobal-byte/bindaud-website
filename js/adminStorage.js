@@ -1,4 +1,12 @@
 import { PRODUCT_CATALOG, formatCurrency } from './helpers.js';
+import {
+  isSupabaseEnabled,
+  getSupabaseProducts,
+  upsertSupabaseProduct,
+  deleteSupabaseProduct,
+  getSupabaseOrders,
+  createSupabaseOrder
+} from './supabaseStorage.js';
 
 const STORAGE_KEYS = {
   state: 'bindaud_admin_state',
@@ -6,9 +14,26 @@ const STORAGE_KEYS = {
   token: 'bindaud_admin_token'
 };
 
-const API_BASE = '/api/admin';
+const API_BASE = (() => {
+  if (typeof window !== 'undefined' && window.BINDAUD_CONFIG?.api?.adminBase) {
+    return window.BINDAUD_CONFIG.api.adminBase;
+  }
+  return '/api/admin';
+})();
 
 const ensureString = (value, fallback = '') => (value == null ? fallback : String(value));
+
+const createProductId = () => `BD-${Date.now().toString().slice(-8)}`;
+const generateProductSlug = (value) => {
+  const text = ensureString(value).trim().toLowerCase();
+  return text
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+};
+
+const generateProductBarcode = () => `BD${Math.floor(100000000 + Math.random() * 900000000)}`;
 
 const readStorage = (key, fallback) => {
   if (typeof window === 'undefined') return fallback;
@@ -259,6 +284,14 @@ export const logoutAdmin = () => {
 };
 
 export const getProducts = async () => {
+  if (isSupabaseEnabled()) {
+    try {
+      return await getSupabaseProducts();
+    } catch (error) {
+      console.warn('Supabase product load failed. Using local storage fallback.', error.message);
+    }
+  }
+
   try {
     const result = await requestAdminApi('/products');
     if (Array.isArray(result.products)) {
@@ -281,11 +314,24 @@ export const saveProducts = (products) => {
 export const upsertProduct = async (productData) => {
   const payload = {
     ...productData,
+    id: ensureString(productData.id, ''),
     price: Number(productData.price) || 0,
     oldPrice: Number(productData.oldPrice) || 0,
     featured: Boolean(productData.featured),
     trending: Boolean(productData.trending),
     bestSeller: Boolean(productData.bestSeller),
+    newArrival: Boolean(productData.newArrival),
+    sale: Boolean(productData.sale),
+    visibility: ensureString(productData.visibility, 'Public'),
+    condition: ensureString(productData.condition, 'New'),
+    availability: ensureString(productData.availability, 'Available'),
+    seoTitle: ensureString(productData.seoTitle, ''),
+    metaDescription: ensureString(productData.metaDescription, ''),
+    ogImage: ensureString(productData.ogImage, ''),
+    slug: ensureString(productData.slug, ''),
+    barcode: ensureString(productData.barcode, ''),
+    images: Array.isArray(productData.images) ? productData.images : [],
+    variants: Array.isArray(productData.variants) ? productData.variants : [],
     views: Number(productData.views) || 0,
     sales: Number(productData.sales) || 0,
     stock: ensureString(productData.stock, 'In Stock'),
@@ -300,6 +346,30 @@ export const upsertProduct = async (productData) => {
   const localState = getAdminState();
   const existingIndex = localState.products.findIndex((item) => item.id === payload.id);
   const isUpdate = Boolean(payload.id && existingIndex >= 0);
+
+  if (isSupabaseEnabled()) {
+    try {
+      const saved = await upsertSupabaseProduct(payload);
+      if (isUpdate) {
+        localState.products[existingIndex] = saved;
+      } else {
+        localState.products.unshift(saved);
+      }
+
+      localState.activity.unshift({
+        id: `activity-product-${Date.now()}`,
+        type: 'product',
+        message: `${saved.name} ${isUpdate ? 'updated' : 'created'} in the admin catalog.`,
+        createdAt: new Date().toISOString()
+      });
+
+      saveAdminState(localState);
+      return saved;
+    } catch (error) {
+      console.warn('Supabase save failed. Trying admin API or local fallback.', error.message);
+    }
+  }
+
   const endpoint = isUpdate ? `/products/${payload.id}` : '/products';
   const method = isUpdate ? 'PUT' : 'POST';
 
@@ -331,7 +401,11 @@ export const upsertProduct = async (productData) => {
 
   const localProduct = {
     ...payload,
-    id: payload.id || `BD-${String(localState.products.length + 1).padStart(3, '0')}`
+    id: payload.id || createProductId(),
+    slug: payload.slug || generateProductSlug(payload.name || payload.code || localState.products.length + 1),
+    barcode: payload.barcode || generateProductBarcode(),
+    images: payload.images || [payload.image],
+    image: payload.image || (Array.isArray(payload.images) && payload.images[0]) || 'assets/products/product1.jpg'
   };
 
   if (existingIndex >= 0) {
@@ -355,12 +429,20 @@ export const deleteProduct = async (productId) => {
   const state = getAdminState();
   const product = state.products.find((item) => item.id === productId);
 
-  try {
-    await requestAdminApi(`/products/${productId}`, {
-      method: 'DELETE'
-    });
-  } catch (error) {
-    console.warn('Admin API delete failed. Using local fallback.', error.message);
+  if (isSupabaseEnabled()) {
+    try {
+      await deleteSupabaseProduct(productId);
+    } catch (error) {
+      console.warn('Supabase delete failed. Trying admin API/local fallback.', error.message);
+    }
+  } else {
+    try {
+      await requestAdminApi(`/products/${productId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.warn('Admin API delete failed. Using local fallback.', error.message);
+    }
   }
 
   state.products = state.products.filter((item) => item.id !== productId);
@@ -391,6 +473,18 @@ export const uploadProductImage = async (file, filename) => {
 
 export const getOrders = () => getAdminState().orders;
 
+export const getOrdersAsync = async () => {
+  if (isSupabaseEnabled()) {
+    try {
+      return await getSupabaseOrders();
+    } catch (error) {
+      console.warn('Supabase order load failed. Using local storage fallback.', error.message);
+    }
+  }
+
+  return getAdminState().orders;
+};
+
 export const createOrder = (orderData) => {
   const state = getAdminState();
   const timestamp = new Date();
@@ -418,6 +512,20 @@ export const createOrder = (orderData) => {
   });
 
   saveAdminState(state);
+  return order;
+};
+
+export const createOrderAsync = async (orderData) => {
+  const order = createOrder(orderData);
+
+  if (isSupabaseEnabled()) {
+    try {
+      return await createSupabaseOrder(order);
+    } catch (error) {
+      console.warn('Supabase order save failed. Using local storage fallback.', error.message);
+    }
+  }
+
   return order;
 };
 
