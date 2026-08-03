@@ -1,22 +1,51 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const path = require('path');
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const morgan = require("morgan");
+const rateLimit = require("express-rate-limit");
+const path = require("path");
 
-const errorHandler = require('./middleware/errorHandler');
-const sessionMiddleware = require('./middleware/session');
-const { getClientUrl, getRateLimitMax, getRateLimitWindowMs } = require('./config/env');
+const errorHandler = require("./middleware/errorHandler");
+const sessionMiddleware = require("./middleware/session");
+const {
+  getClientUrl,
+  getRateLimitMax,
+  getRateLimitWindowMs,
+} = require("./config/env");
 
 const app = express();
 
-app.set('trust proxy', 1);
+const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
+const API_BASE = process.env.API_BASE || (isVercel ? "" : "/api");
+
+const mountRoute = (route, handler) => {
+  app.use(route, handler);
+  if (!isVercel) return;
+  if (route.startsWith("/api")) {
+    const altRoute = route.slice(4) || "/";
+    app.use(altRoute, handler);
+  } else {
+    app.use(`/api${route === "/" ? "" : route}`, handler);
+  }
+};
+
+const mountGetRoute = (route, handler) => {
+  app.get(route, handler);
+  if (!isVercel) return;
+  if (route.startsWith("/api")) {
+    const altRoute = route.slice(4) || "/";
+    app.get(altRoute, handler);
+  } else {
+    app.get(`/api${route}`, handler);
+  }
+};
+
+app.set("trust proxy", 1);
 app.use(helmet());
 const allowedOrigins = [
   getClientUrl(),
-  'http://127.0.0.1:8080',
-  'http://localhost:8080',
+  "http://127.0.0.1:8080",
+  "http://localhost:8080",
 ];
 
 app.use(
@@ -25,15 +54,15 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
-  })
+  }),
 );
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
 const limiter = rateLimit({
   windowMs: getRateLimitWindowMs(),
@@ -42,36 +71,36 @@ const limiter = rateLimit({
   legacyHeaders: false,
   message: {
     success: false,
-    message: 'Too many requests. Please try again later.',
+    message: "Too many requests. Please try again later.",
   },
 });
-app.use('/api', limiter);
+app.use(API_BASE || "/", limiter);
 app.use(sessionMiddleware);
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.get('/api/health', (_req, res) => {
-  res.json({ success: true, message: 'BIN DAUD backend is online' });
+mountGetRoute(`${API_BASE}/health`, (_req, res) => {
+  res.json({ success: true, message: "BIN DAUD backend is online" });
 });
 
 // Simple file-based admin API (for Vercel deployment)
-app.use('/api/admin', require('./routes/simpleAdminRoutes'));
+mountRoute(`${API_BASE}/admin`, require("./routes/simpleAdminRoutes"));
 
-app.use('/api/admin', require('./routes/adminRoutes'));
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/products', require('./routes/productRoutes'));
-app.use('/api/categories', require('./routes/categoryRoutes'));
-app.use('/api/orders', require('./routes/orderRoutes'));
-app.use('/api/customers', require('./routes/customerRoutes'));
-app.use('/api/reviews', require('./routes/reviewRoutes'));
-app.use('/api/coupons', require('./routes/couponRoutes'));
-app.use('/api/cart', require('./routes/cartRoutes'));
-app.use('/api/wishlist', require('./routes/wishlistRoutes'));
-app.use('/api/payments', require('./routes/paymentRoutes'));
-app.use('/api/settings', require('./routes/settingsRoutes'));
+mountRoute(`${API_BASE}/admin`, require("./routes/adminRoutes"));
+mountRoute(`${API_BASE}/auth`, require("./routes/authRoutes"));
+mountRoute(`${API_BASE}/products`, require("./routes/productRoutes"));
+mountRoute(`${API_BASE}/categories`, require("./routes/categoryRoutes"));
+mountRoute(`${API_BASE}/orders`, require("./routes/orderRoutes"));
+mountRoute(`${API_BASE}/customers`, require("./routes/customerRoutes"));
+mountRoute(`${API_BASE}/reviews`, require("./routes/reviewRoutes"));
+mountRoute(`${API_BASE}/coupons`, require("./routes/couponRoutes"));
+mountRoute(`${API_BASE}/cart`, require("./routes/cartRoutes"));
+mountRoute(`${API_BASE}/wishlist`, require("./routes/wishlistRoutes"));
+mountRoute(`${API_BASE}/payments`, require("./routes/paymentRoutes"));
+mountRoute(`${API_BASE}/settings`, require("./routes/settingsRoutes"));
 
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
+  res.status(404).json({ success: false, message: "Route not found" });
 });
 
 app.use(errorHandler);
