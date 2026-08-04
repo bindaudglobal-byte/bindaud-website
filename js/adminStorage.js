@@ -1,121 +1,141 @@
-import { PRODUCT_CATALOG, formatCurrency } from './helpers.js';
+import { PRODUCT_CATALOG, formatCurrency } from "./helpers.js";
 import {
   isSupabaseEnabled,
   getSupabaseProducts,
   upsertSupabaseProduct,
   deleteSupabaseProduct,
   getSupabaseOrders,
-  createSupabaseOrder
-} from './supabaseStorage.js';
+  createSupabaseOrder,
+  uploadSupabaseFile,
+} from "./supabaseStorage.js";
 
 const STORAGE_KEYS = {
-  state: 'bindaud_admin_state',
-  session: 'bindaud_admin_session',
-  token: 'bindaud_admin_token'
+  state: "bindaud_admin_state",
+  session: "bindaud_admin_session",
+  token: "bindaud_admin_token",
 };
 
+const getWindow = () => (typeof window === "undefined" ? null : window);
+
 const API_BASE = (() => {
-  if (typeof window !== 'undefined' && window.BINDAUD_CONFIG?.api?.adminBase) {
+  if (typeof window !== "undefined" && window.BINDAUD_CONFIG?.api?.adminBase) {
     return window.BINDAUD_CONFIG.api.adminBase;
   }
-  return '/api/admin';
+  return "/api/admin";
 })();
 
-const ensureString = (value, fallback = '') => (value == null ? fallback : String(value));
+const ensureString = (value, fallback = "") =>
+  value == null ? fallback : String(value);
 
 const createProductId = () => `BD-${Date.now().toString().slice(-8)}`;
 const generateProductSlug = (value) => {
   const text = ensureString(value).trim().toLowerCase();
   return text
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 };
 
-const generateProductBarcode = () => `BD${Math.floor(100000000 + Math.random() * 900000000)}`;
+const generateProductBarcode = () =>
+  `BD${Math.floor(100000000 + Math.random() * 900000000)}`;
 
 const readStorage = (key, fallback) => {
-  if (typeof window === 'undefined') return fallback;
+  const win = getWindow();
+  if (!win) return fallback;
 
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch (error) {
-    return fallback;
+  const storage = win.__BINDAUD_STORAGE__ || {};
+  if (Object.prototype.hasOwnProperty.call(storage, key)) {
+    return storage[key];
   }
+
+  if (key === STORAGE_KEYS.state && win.__BINDAUD_ADMIN_STATE) {
+    return win.__BINDAUD_ADMIN_STATE;
+  }
+
+  return fallback;
 };
 
 const writeStorage = (key, value) => {
-  if (typeof window === 'undefined') return;
+  const win = getWindow();
+  if (!win) return;
 
-  window.localStorage.setItem(key, JSON.stringify(value));
-};
+  const storage = win.__BINDAUD_STORAGE__ || {};
+  storage[key] = value;
+  win.__BINDAUD_STORAGE__ = storage;
 
-const syncCatalogSnapshot = (state) => {
-  if (typeof window === 'undefined') return;
-
-  const catalog = Array.isArray(state?.products) ? state.products : [];
-  window.__BINDAUD_PRODUCTS = catalog;
-
-  try {
-    window.dispatchEvent(new CustomEvent('catalog:updated', { detail: catalog }));
-  } catch (error) {
-    console.warn('Catalog sync event failed:', error.message);
+  if (key === STORAGE_KEYS.state) {
+    win.__BINDAUD_ADMIN_STATE = value;
   }
 };
 
-const getToken = () => readStorage(STORAGE_KEYS.token, '');
+const syncCatalogSnapshot = (state) => {
+  const win = getWindow();
+  if (!win) return;
+
+  const catalog = Array.isArray(state?.products) ? state.products : [];
+  win.__BINDAUD_PRODUCTS = catalog;
+
+  try {
+    win.dispatchEvent(new CustomEvent("catalog:updated", { detail: catalog }));
+  } catch (error) {
+    console.warn("Catalog sync event failed:", error.message);
+  }
+};
+
+const getToken = () => readStorage(STORAGE_KEYS.token, "");
 
 const setToken = (token) => {
   writeStorage(STORAGE_KEYS.token, token);
 };
 
 const clearToken = () => {
-  if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(STORAGE_KEYS.token);
+  const win = getWindow();
+  if (!win) return;
+  delete win.__BINDAUD_STORAGE__?.[STORAGE_KEYS.token];
 };
 
-const createInitialProducts = () => PRODUCT_CATALOG.map((product, index) => ({
-  ...product,
-  image: product.image,
-  featured: index === 0 || product.badge === 'Best Seller',
-  trending: product.badge === 'New' || product.collection === 'jackets',
-  bestSeller: product.badge === 'Best Seller',
-  views: 12 + index * 4,
-  sales: 3 + index
-}));
+const createInitialProducts = () =>
+  PRODUCT_CATALOG.map((product, index) => ({
+    ...product,
+    image: product.image,
+    featured: index === 0 || product.badge === "Best Seller",
+    trending: product.badge === "New" || product.collection === "jackets",
+    bestSeller: product.badge === "Best Seller",
+    views: 12 + index * 4,
+    sales: 3 + index,
+  }));
 
 const createDefaultState = () => ({
   admin: {
-    username: 'admin',
-    password: 'Bindaud@2026'
+    username: "admin",
+    password: "Bindaud@2026",
   },
   session: {
     loggedIn: false,
     rememberMe: false,
     lastLogin: null,
-    username: ''
+    username: "",
   },
   products: createInitialProducts(),
   orders: [],
   coupons: [
     {
-      id: 'coupon-welcome',
-      code: 'WELCOME10',
+      id: "coupon-welcome",
+      code: "WELCOME10",
       discount: 10,
-      expiry: '2026-12-31',
+      expiry: "2026-12-31",
       usageLimit: 100,
-      used: 12
+      used: 12,
     },
     {
-      id: 'coupon-bindaud',
-      code: 'BINDAUD5',
+      id: "coupon-bindaud",
+      code: "BINDAUD5",
       discount: 5,
-      expiry: '2026-10-31',
+      expiry: "2026-10-31",
       usageLimit: 75,
-      used: 24
-    }
+      used: 24,
+    },
   ],
   delivery: {
     islamabad: 250,
@@ -124,50 +144,50 @@ const createDefaultState = () => ({
     sindh: 500,
     balochistan: 700,
     freeShippingLimit: 8000,
-    expressShipping: true
+    expressShipping: true,
   },
   settings: {
-    businessName: 'BIN DAUD',
-    whatsappNumber: '923288582902',
-    facebook: 'https://www.facebook.com/profile.php?id=61591782530716',
-    instagram: 'https://www.instagram.com/bindaudglobal/',
-    googleBusiness: 'BIN DAUD Luxury Streetwear',
-    email: 'hello@bindaud.com',
-    currency: 'PKR',
+    businessName: "BIN DAUD",
+    whatsappNumber: "923288582902",
+    facebook: "https://www.facebook.com/profile.php?id=61591782530716",
+    instagram: "https://www.instagram.com/bindaudglobal/",
+    googleBusiness: "BIN DAUD Luxury Streetwear",
+    email: "hello@bindaud.com",
+    currency: "PKR",
     tax: 5,
-    shipping: 'Free delivery on orders above PKR 8,000.'
+    taxEnabled: true,
+    shipping: "Free delivery on orders above PKR 8,000.",
   },
   activity: [
     {
-      id: 'activity-seed',
-      type: 'system',
-      message: 'Admin dashboard initialized with the current BIN DAUD catalog.',
-      createdAt: new Date().toISOString()
-    }
-  ]
+      id: "activity-seed",
+      type: "system",
+      message: "Admin dashboard initialized with the current BIN DAUD catalog.",
+      createdAt: new Date().toISOString(),
+    },
+  ],
 });
 
 const requestAdminApi = async (path, options = {}) => {
-  if (typeof window === 'undefined') {
-    throw new Error('Admin API is only available in the browser.');
+  if (typeof window === "undefined") {
+    throw new Error("Admin API is only available in the browser.");
   }
 
-  const token = getToken();
   const headers = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...(options.headers || {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
 
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers
+    headers,
+    credentials: "include",
   });
 
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || 'Admin API request failed');
+    throw new Error(data.message || "Admin API request failed");
   }
 
   return data;
@@ -187,97 +207,115 @@ export const getAdminState = () => {
     ...state,
     admin: {
       ...createDefaultState().admin,
-      ...(state.admin || {})
+      ...(state.admin || {}),
     },
     delivery: {
       ...createDefaultState().delivery,
-      ...(state.delivery || {})
+      ...(state.delivery || {}),
     },
     settings: {
       ...createDefaultState().settings,
-      ...(state.settings || {})
+      ...(state.settings || {}),
     },
     coupons: state.coupons || createDefaultState().coupons,
-    products: state.products || createInitialProducts(),
-    orders: state.orders || [],
-    activity: state.activity || createDefaultState().activity
+    products: Array.isArray(state.products)
+      ? state.products
+      : createInitialProducts(),
+    orders: Array.isArray(state.orders) ? state.orders : [],
+    activity: state.activity || createDefaultState().activity,
   };
 };
 
 export const saveAdminState = (state) => {
-  writeStorage(STORAGE_KEYS.state, state);
-  syncCatalogSnapshot(state);
-  return state;
+  const nextState = {
+    ...state,
+    products: Array.isArray(state.products) ? state.products : [],
+    orders: Array.isArray(state.orders) ? state.orders : [],
+    activity: Array.isArray(state.activity) ? state.activity : [],
+  };
+
+  writeStorage(STORAGE_KEYS.state, nextState);
+  syncCatalogSnapshot(nextState);
+  return nextState;
 };
 
 export const getAdminSession = () => readStorage(STORAGE_KEYS.session, null);
+
+export const checkAdminSession = async () => {
+  try {
+    const result = await requestAdminApi("/session");
+    if (result.success && result.authenticated) {
+      const session = {
+        loggedIn: true,
+        rememberMe: false,
+        lastLogin: new Date().toISOString(),
+        username: "admin",
+      };
+      saveAdminSession(session);
+      return session;
+    }
+  } catch (error) {
+    console.warn("Admin session check failed:", error.message);
+  }
+
+  const session = getAdminSession();
+  return session?.loggedIn ? session : null;
+};
 
 export const saveAdminSession = (session) => {
   writeStorage(STORAGE_KEYS.session, session);
   return session;
 };
 
-const localAuthenticateAdmin = (username, password, rememberMe = false) => {
-  const state = getAdminState();
-  const normalizedUsername = ensureString(username).trim().toLowerCase();
-  const normalizedPassword = ensureString(password).trim();
-
-  const isValid = normalizedUsername === ensureString(state.admin.username).trim().toLowerCase() && normalizedPassword === ensureString(state.admin.password).trim();
-
-  if (!isValid) {
-    return false;
-  }
-
-  const session = {
-    loggedIn: true,
-    rememberMe,
-    lastLogin: new Date().toISOString(),
-    username: state.admin.username
-  };
-
-  state.session = session;
-  saveAdminState(state);
-  saveAdminSession(session);
-
-  return true;
-};
-
-export const authenticateAdmin = async (username, password, rememberMe = false) => {
+export const authenticateAdmin = async (
+  username,
+  password,
+  rememberMe = false,
+) => {
   const normalizedUsername = ensureString(username).trim();
   const normalizedPassword = ensureString(password).trim();
 
   try {
-    const result = await requestAdminApi('/login', {
-      method: 'POST',
-      body: JSON.stringify({ username: normalizedUsername, password: normalizedPassword })
+    const result = await requestAdminApi("/login", {
+      method: "POST",
+      body: JSON.stringify({
+        username: normalizedUsername,
+        password: normalizedPassword,
+      }),
     });
 
-    if (result.success && result.token) {
-      setToken(result.token);
+    if (result.success) {
+      setToken(result.token || "admin-token-2026");
       const session = {
         loggedIn: true,
         rememberMe,
         lastLogin: new Date().toISOString(),
-        username: normalizedUsername
+        username: normalizedUsername,
       };
       saveAdminSession(session);
       return true;
     }
   } catch (error) {
-    console.warn('Admin API login failed, falling back to local auth:', error.message);
+    console.warn("Admin API login failed:", error.message);
   }
 
-  return localAuthenticateAdmin(normalizedUsername, normalizedPassword, rememberMe);
+  return false;
 };
 
-export const logoutAdmin = () => {
+export const logoutAdmin = async () => {
   clearToken();
+  try {
+    await requestAdminApi("/logout", { method: "POST" });
+  } catch (error) {
+    console.warn("Admin logout request failed:", error.message);
+  }
+
   const state = getAdminState();
   state.session = {
     loggedIn: false,
     rememberMe: false,
     lastLogin: null,
-    username: ''
+    username: "",
   };
   saveAdminState(state);
   saveAdminSession(state.session);
@@ -288,17 +326,17 @@ export const getProducts = async () => {
     try {
       return await getSupabaseProducts();
     } catch (error) {
-      console.warn('Supabase product load failed. Using local storage fallback.', error.message);
+      console.warn("Supabase product load failed.", error.message);
     }
   }
 
   try {
-    const result = await requestAdminApi('/products');
+    const result = await requestAdminApi("/products");
     if (Array.isArray(result.products)) {
       return result.products;
     }
   } catch (error) {
-    console.warn('Failed to load admin products from API. Using local storage fallback.', error.message);
+    console.warn("Failed to load admin products from API.", error.message);
   }
 
   return getAdminState().products;
@@ -314,7 +352,7 @@ export const saveProducts = (products) => {
 export const upsertProduct = async (productData) => {
   const payload = {
     ...productData,
-    id: ensureString(productData.id, ''),
+    id: ensureString(productData.id, ""),
     price: Number(productData.price) || 0,
     oldPrice: Number(productData.oldPrice) || 0,
     featured: Boolean(productData.featured),
@@ -322,29 +360,34 @@ export const upsertProduct = async (productData) => {
     bestSeller: Boolean(productData.bestSeller),
     newArrival: Boolean(productData.newArrival),
     sale: Boolean(productData.sale),
-    visibility: ensureString(productData.visibility, 'Public'),
-    condition: ensureString(productData.condition, 'New'),
-    availability: ensureString(productData.availability, 'Available'),
-    seoTitle: ensureString(productData.seoTitle, ''),
-    metaDescription: ensureString(productData.metaDescription, ''),
-    ogImage: ensureString(productData.ogImage, ''),
-    slug: ensureString(productData.slug, ''),
-    barcode: ensureString(productData.barcode, ''),
+    visibility: ensureString(productData.visibility, "Public"),
+    condition: ensureString(productData.condition, "New"),
+    availability: ensureString(productData.availability, "Available"),
+    seoTitle: ensureString(productData.seoTitle, ""),
+    metaDescription: ensureString(productData.metaDescription, ""),
+    ogImage: ensureString(productData.ogImage, ""),
+    slug: ensureString(productData.slug, ""),
+    barcode: ensureString(productData.barcode, ""),
     images: Array.isArray(productData.images) ? productData.images : [],
     variants: Array.isArray(productData.variants) ? productData.variants : [],
     views: Number(productData.views) || 0,
     sales: Number(productData.sales) || 0,
-    stock: ensureString(productData.stock, 'In Stock'),
-    collection: ensureString(productData.collection, 'tees'),
-    category: ensureString(productData.category, 'Essentials'),
-    description: ensureString(productData.description, 'Premium BIN DAUD piece.'),
-    code: ensureString(productData.code, 'BD-NEW'),
-    name: ensureString(productData.name, 'New Product'),
-    image: ensureString(productData.image, 'assets/products/product1.jpg')
+    stock: ensureString(productData.stock, "In Stock"),
+    collection: ensureString(productData.collection, "tees"),
+    category: ensureString(productData.category, "Essentials"),
+    description: ensureString(
+      productData.description,
+      "Premium BIN DAUD piece.",
+    ),
+    code: ensureString(productData.code, "BD-NEW"),
+    name: ensureString(productData.name, "New Product"),
+    image: ensureString(productData.image, "assets/products/product1.jpg"),
   };
 
   const localState = getAdminState();
-  const existingIndex = localState.products.findIndex((item) => item.id === payload.id);
+  const existingIndex = localState.products.findIndex(
+    (item) => item.id === payload.id,
+  );
   const isUpdate = Boolean(payload.id && existingIndex >= 0);
 
   if (isSupabaseEnabled()) {
@@ -358,25 +401,28 @@ export const upsertProduct = async (productData) => {
 
       localState.activity.unshift({
         id: `activity-product-${Date.now()}`,
-        type: 'product',
-        message: `${saved.name} ${isUpdate ? 'updated' : 'created'} in the admin catalog.`,
-        createdAt: new Date().toISOString()
+        type: "product",
+        message: `${saved.name} ${isUpdate ? "updated" : "created"} in the admin catalog.`,
+        createdAt: new Date().toISOString(),
       });
 
       saveAdminState(localState);
       return saved;
     } catch (error) {
-      console.warn('Supabase save failed. Trying admin API or local fallback.', error.message);
+      console.warn(
+        "Supabase save failed. Trying admin API or local fallback.",
+        error.message,
+      );
     }
   }
 
-  const endpoint = isUpdate ? `/products/${payload.id}` : '/products';
-  const method = isUpdate ? 'PUT' : 'POST';
+  const endpoint = isUpdate ? `/products/${payload.id}` : "/products";
+  const method = isUpdate ? "PUT" : "POST";
 
   try {
     const result = await requestAdminApi(endpoint, {
       method,
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     const saved = result.product || payload;
@@ -388,24 +434,34 @@ export const upsertProduct = async (productData) => {
 
     localState.activity.unshift({
       id: `activity-product-${Date.now()}`,
-      type: 'product',
-      message: `${saved.name} ${isUpdate ? 'updated' : 'created'} in the admin catalog.`,
-      createdAt: new Date().toISOString()
+      type: "product",
+      message: `${saved.name} ${isUpdate ? "updated" : "created"} in the admin catalog.`,
+      createdAt: new Date().toISOString(),
     });
 
     saveAdminState(localState);
     return saved;
   } catch (error) {
-    console.warn('Admin API save failed. Using local update fallback.', error.message);
+    console.warn(
+      "Admin API save failed. Using local update fallback.",
+      error.message,
+    );
   }
 
   const localProduct = {
     ...payload,
     id: payload.id || createProductId(),
-    slug: payload.slug || generateProductSlug(payload.name || payload.code || localState.products.length + 1),
+    slug:
+      payload.slug ||
+      generateProductSlug(
+        payload.name || payload.code || localState.products.length + 1,
+      ),
     barcode: payload.barcode || generateProductBarcode(),
     images: payload.images || [payload.image],
-    image: payload.image || (Array.isArray(payload.images) && payload.images[0]) || 'assets/products/product1.jpg'
+    image:
+      payload.image ||
+      (Array.isArray(payload.images) && payload.images[0]) ||
+      "assets/products/product1.jpg",
   };
 
   if (existingIndex >= 0) {
@@ -416,9 +472,9 @@ export const upsertProduct = async (productData) => {
 
   localState.activity.unshift({
     id: `activity-product-${Date.now()}`,
-    type: 'product',
-    message: `${localProduct.name} ${existingIndex >= 0 ? 'updated' : 'created'} in the admin catalog.`,
-    createdAt: new Date().toISOString()
+    type: "product",
+    message: `${localProduct.name} ${existingIndex >= 0 ? "updated" : "created"} in the admin catalog.`,
+    createdAt: new Date().toISOString(),
   });
 
   saveAdminState(localState);
@@ -433,24 +489,30 @@ export const deleteProduct = async (productId) => {
     try {
       await deleteSupabaseProduct(productId);
     } catch (error) {
-      console.warn('Supabase delete failed. Trying admin API/local fallback.', error.message);
+      console.warn(
+        "Supabase delete failed. Trying admin API/local fallback.",
+        error.message,
+      );
     }
   } else {
     try {
       await requestAdminApi(`/products/${productId}`, {
-        method: 'DELETE'
+        method: "DELETE",
       });
     } catch (error) {
-      console.warn('Admin API delete failed. Using local fallback.', error.message);
+      console.warn(
+        "Admin API delete failed. Using local fallback.",
+        error.message,
+      );
     }
   }
 
   state.products = state.products.filter((item) => item.id !== productId);
   state.activity.unshift({
     id: `activity-delete-${Date.now()}`,
-    type: 'product',
-    message: `${product?.name || 'Product'} removed from the admin catalog.`,
-    createdAt: new Date().toISOString()
+    type: "product",
+    message: `${product?.name || "Product"} removed from the admin catalog.`,
+    createdAt: new Date().toISOString(),
   });
 
   saveAdminState(state);
@@ -458,15 +520,31 @@ export const deleteProduct = async (productId) => {
 };
 
 export const uploadProductImage = async (file, filename) => {
+  if (isSupabaseEnabled()) {
+    try {
+      const safeName = filename.replace(/\s+/g, "-").toLowerCase();
+      const path = `products/${Date.now()}-${safeName}`;
+      return await uploadSupabaseFile("bindaud-assets", path, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
+    } catch (error) {
+      console.warn(
+        "Supabase image upload failed, using fallback.",
+        error.message,
+      );
+    }
+  }
+
   try {
-    const result = await requestAdminApi('/upload', {
-      method: 'POST',
-      body: JSON.stringify({ file, filename })
+    const result = await requestAdminApi("/upload", {
+      method: "POST",
+      body: JSON.stringify({ file, filename }),
     });
 
     return result.file?.path || filename;
   } catch (error) {
-    console.warn('Image upload failed. Using local file data.', error.message);
+    console.warn("Image upload failed. Using local file data.", error.message);
     return filename;
   }
 };
@@ -474,25 +552,21 @@ export const uploadProductImage = async (file, filename) => {
 export const getOrders = () => getAdminState().orders;
 
 export const getOrdersAsync = async () => {
+  try {
+    const result = await requestAdminApi("/orders");
+    if (result.success && Array.isArray(result.data)) {
+      return result.data;
+    }
+  } catch (error) {
+    console.warn("Backend order fetch failed:", error.message);
+  }
+
   if (isSupabaseEnabled()) {
     try {
       return await getSupabaseOrders();
     } catch (error) {
-      console.warn('Supabase order load failed. Using local storage fallback.', error.message);
+      console.warn("Supabase order load failed.", error.message);
     }
-  }
-
-  // Try to fetch from backend API
-  try {
-    const response = await fetch('/api/admin/orders');
-    if (response.ok) {
-      const result = await response.json();
-      if (result.success && Array.isArray(result.data)) {
-        return result.data;
-      }
-    }
-  } catch (error) {
-    console.warn('Backend order fetch failed. Using local storage fallback.', error.message);
   }
 
   return getAdminState().orders;
@@ -504,69 +578,97 @@ export const createOrder = (orderData) => {
   const order = {
     id: `ORD-${timestamp.getTime()}`,
     orderNumber: `ORD-${timestamp.getTime().toString().slice(-6)}`,
-    customerName: ensureString(orderData.customerName, 'Guest Customer'),
-    phone: ensureString(orderData.phone, '—'),
-    address: ensureString(orderData.address, '—'),
-    city: ensureString(orderData.city, '—'),
+    customerName: ensureString(orderData.customerName, "Guest Customer"),
+    phone: ensureString(orderData.phone, "—"),
+    address: ensureString(orderData.address, "—"),
+    city: ensureString(orderData.city, "—"),
     products: orderData.products || [],
     total: Number(orderData.total) || 0,
-    paymentMethod: ensureString(orderData.paymentMethod, 'Cash on Delivery'),
-    status: 'Pending',
+    paymentMethod: ensureString(orderData.paymentMethod, "Cash on Delivery"),
+    status: "Pending",
     createdAt: timestamp.toISOString(),
-    updatedAt: timestamp.toISOString()
+    updatedAt: timestamp.toISOString(),
   };
 
   state.orders.unshift(order);
   state.activity.unshift({
     id: `activity-order-${Date.now()}`,
-    type: 'order',
+    type: "order",
     message: `Order ${order.orderNumber} received from ${order.customerName}.`,
-    createdAt: timestamp.toISOString()
+    createdAt: timestamp.toISOString(),
   });
 
-  saveAdminState(state);
   return order;
 };
 
 export const createOrderAsync = async (orderData) => {
-  const order = createOrder(orderData);
+  const payload = {
+    ...orderData,
+    status: orderData.status || orderData.orderStatus || "Pending",
+    paymentStatus: orderData.paymentStatus || "unpaid",
+    createdAt: orderData.createdAt || new Date().toISOString(),
+    updatedAt: orderData.updatedAt || new Date().toISOString(),
+  };
+
+  try {
+    const result = await requestAdminApi("/orders", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    if (result.success && result.data) {
+      return result.data;
+    }
+  } catch (error) {
+    console.warn("Backend order save failed:", error.message);
+  }
 
   if (isSupabaseEnabled()) {
     try {
-      return await createSupabaseOrder(order);
+      return await createSupabaseOrder(payload);
     } catch (error) {
-      console.warn('Supabase order save failed. Using local storage fallback.', error.message);
+      console.warn("Supabase order save failed.", error.message);
+      throw error;
     }
   }
 
-  return order;
+  throw new Error("Supabase is not configured for order storage.");
 };
 
-export const updateOrderStatus = (orderId, status) => {
+export const updateOrderStatus = async (orderId, status) => {
   const state = getAdminState();
   const order = state.orders.find((item) => item.id === orderId);
 
-  if (!order) return null;
+  if (!order) {
+    // Try backend update even if local order is missing
+    try {
+      await requestAdminApi(`/orders/${orderId}`, {
+        method: "PUT",
+        body: JSON.stringify({ status, orderStatus: status }),
+      });
+    } catch (error) {
+      console.warn("Failed to sync order status to backend:", error.message);
+    }
+    return null;
+  }
 
   order.status = status;
   order.updatedAt = new Date().toISOString();
   state.activity.unshift({
     id: `activity-status-${Date.now()}`,
-    type: 'order',
+    type: "order",
     message: `Order ${order.orderNumber} marked as ${status}.`,
-    createdAt: order.updatedAt
+    createdAt: order.updatedAt,
   });
 
-  saveAdminState(state);
-
-  // Try to sync to backend API
-  fetch(`/api/admin/orders/${orderId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status, orderStatus: status })
-  }).catch((error) => {
-    console.warn('Failed to sync order status to backend:', error.message);
-  });
+  try {
+    await requestAdminApi(`/orders/${orderId}`, {
+      method: "PUT",
+      body: JSON.stringify({ status, orderStatus: status }),
+    });
+  } catch (error) {
+    console.warn("Failed to sync order status to backend:", error.message);
+  }
 
   return order;
 };
@@ -584,19 +686,19 @@ export const createCoupon = (couponData) => {
   const state = getAdminState();
   const coupon = {
     id: `coupon-${Date.now()}`,
-    code: ensureString(couponData.code, 'NEWCOUPON').toUpperCase(),
+    code: ensureString(couponData.code, "NEWCOUPON").toUpperCase(),
     discount: Number(couponData.discount) || 0,
-    expiry: ensureString(couponData.expiry, ''),
+    expiry: ensureString(couponData.expiry, ""),
     usageLimit: Number(couponData.usageLimit) || 0,
-    used: 0
+    used: 0,
   };
 
   state.coupons.unshift(coupon);
   state.activity.unshift({
     id: `activity-coupon-${Date.now()}`,
-    type: 'coupon',
+    type: "coupon",
     message: `Coupon ${coupon.code} created for the storefront.`,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   });
 
   saveAdminState(state);
@@ -610,9 +712,9 @@ export const deleteCoupon = (couponId) => {
 
   state.activity.unshift({
     id: `activity-delete-coupon-${Date.now()}`,
-    type: 'coupon',
-    message: `Coupon ${coupon?.code || 'coupon'} removed.`,
-    createdAt: new Date().toISOString()
+    type: "coupon",
+    message: `Coupon ${coupon?.code || "coupon"} removed.`,
+    createdAt: new Date().toISOString(),
   });
 
   saveAdminState(state);
@@ -626,7 +728,7 @@ export const saveDeliverySettings = (settings) => {
   state.delivery = {
     ...state.delivery,
     ...settings,
-    expressShipping: Boolean(settings.expressShipping)
+    expressShipping: Boolean(settings.expressShipping),
   };
   saveAdminState(state);
   return state.delivery;
@@ -636,12 +738,24 @@ export const getWebsiteSettings = () => getAdminState().settings;
 
 export const saveWebsiteSettings = (settings) => {
   const state = getAdminState();
-  state.settings = {
+  const nextSettings = {
     ...state.settings,
     ...settings,
-    tax: Number(settings.tax) || 0
+    tax: Number(settings.tax) || 0,
+    taxEnabled: settings.taxEnabled !== false,
   };
+
+  state.settings = nextSettings;
   saveAdminState(state);
+
+  const win = getWindow();
+  if (win) {
+    win.__BINDAUD_SITE_SETTINGS = {
+      ...(win.__BINDAUD_SITE_SETTINGS || {}),
+      ...nextSettings,
+    };
+  }
+
   return state.settings;
 };
 
@@ -654,9 +768,9 @@ export const recordProductView = (productId) => {
   product.views = Number(product.views || 0) + 1;
   state.activity.unshift({
     id: `activity-view-${Date.now()}`,
-    type: 'analytics',
+    type: "analytics",
     message: `${product.name} was viewed from the storefront.`,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   });
 
   saveAdminState(state);
@@ -667,23 +781,33 @@ export const getActivityFeed = () => getAdminState().activity.slice(0, 8);
 
 export const getAnalytics = () => {
   const state = getAdminState();
-  const products = [...state.products].sort((a, b) => (b.sales || 0) - (a.sales || 0));
+  const products = [...state.products].sort(
+    (a, b) => (b.sales || 0) - (a.sales || 0),
+  );
   const topSelling = products.slice(0, 4);
-  const mostViewed = [...products].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 4);
+  const mostViewed = [...products]
+    .sort((a, b) => (b.views || 0) - (a.views || 0))
+    .slice(0, 4);
   const ordersThisMonth = state.orders.filter((order) => {
     const createdAt = new Date(order.createdAt);
     const now = new Date();
-    return createdAt.getMonth() === now.getMonth() && createdAt.getFullYear() === now.getFullYear();
+    return (
+      createdAt.getMonth() === now.getMonth() &&
+      createdAt.getFullYear() === now.getFullYear()
+    );
   }).length;
 
-  const revenue = state.orders.reduce((acc, order) => acc + (Number(order.total) || 0), 0);
+  const revenue = state.orders.reduce(
+    (acc, order) => acc + (Number(order.total) || 0),
+    0,
+  );
 
   return {
     topSelling,
     mostViewed,
     ordersThisMonth,
     revenue,
-    recentActivity: state.activity.slice(0, 8)
+    recentActivity: state.activity.slice(0, 8),
   };
 };
 

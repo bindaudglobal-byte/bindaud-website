@@ -598,15 +598,26 @@
 
 <script>
     const API_URL = '/api/admin';
-    let authToken = localStorage.getItem('adminToken');
+    let authToken = null;
     let allProducts = [];
 
     // PAGE INITIALIZATION
-    document.addEventListener('DOMContentLoaded', () => {
-        if (authToken) {
-            showDashboard();
-            loadProducts();
-        } else {
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch(`${API_URL}/session`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+
+            if (data.success && data.authenticated) {
+                authToken = 'session';
+                showDashboard();
+                await loadProducts();
+            } else {
+                document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            }
+        } catch (error) {
+            console.warn('Admin session check failed:', error);
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
         }
 
@@ -650,6 +661,7 @@
         try {
             const response = await fetch(`${API_URL}/login`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
@@ -657,10 +669,9 @@
             const data = await response.json();
 
             if (data.success) {
-                authToken = data.token;
-                localStorage.setItem('adminToken', authToken);
+                authToken = data.token || 'session';
                 showDashboard();
-                loadProducts();
+                await loadProducts();
             } else {
                 errorDiv.innerHTML = `<div class="error-message">❌ ${data.message}</div>`;
             }
@@ -673,7 +684,8 @@
     async function loadProducts() {
         try {
             const response = await fetch(`${API_URL}/products`, {
-                headers: { 'Authorization': `Bearer ${authToken}` }
+                credentials: 'include',
+                headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
             });
 
             const data = await response.json();
@@ -762,8 +774,9 @@
         try {
             const response = await fetch(`${API_URL}/products`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
-                    'Authorization': `Bearer ${authToken}`,
+                    ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(product)
@@ -791,7 +804,8 @@
         try {
             const response = await fetch(`${API_URL}/products/${productId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${authToken}` }
+                credentials: 'include',
+                headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
             });
 
             const data = await response.json();
@@ -827,9 +841,17 @@
     }
 
     // LOGOUT
-    function logout() {
+    async function logout() {
         if (confirm('Are you sure you want to logout?')) {
-            localStorage.removeItem('adminToken');
+            try {
+                await fetch(`${API_URL}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (error) {
+                console.warn('Logout request failed:', error);
+            }
+
             authToken = null;
             document.getElementById('loginPage').style.display = 'flex';
             document.getElementById('adminDashboard').style.display = 'none';

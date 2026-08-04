@@ -7,6 +7,7 @@
     "test": "node --test backend/**/*.test.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.0",
     "bcrypt": "latest",
     "cloudinary": "latest",
     "cors": "latest",
@@ -19,6 +20,7 @@
     "morgan": "latest",
     "multer": "latest",
     "nodemailer": "latest",
+    "resend": "^6.18.1",
     "streamifier": "latest",
     "validator": "latest"
   }

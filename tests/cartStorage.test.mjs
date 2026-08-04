@@ -1,5 +1,5 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import test from "node:test";
+import assert from "node:assert/strict";
 
 let storage = new Map();
 
@@ -12,18 +12,18 @@ globalThis.localStorage = {
   },
   removeItem(key) {
     storage.delete(key);
-  }
+  },
 };
 
 globalThis.window = {
-  dispatchEvent() {}
+  dispatchEvent() {},
 };
 
-test('zero tax rate remains zero and does not fall back to 5%', async () => {
-  const { calculateCartTotals } = await import('../js/cartStorage.js');
+test("zero tax rate remains zero and does not fall back to 5%", async () => {
+  const { calculateCartTotals } = await import("../js/cartStorage.js");
   const cart = [{ price: 1884, quantity: 1 }];
 
-  storage.set('bindaud_admin_state', JSON.stringify({ settings: { tax: 0 } }));
+  storage.set("bindaud_admin_state", JSON.stringify({ settings: { tax: 0 } }));
   const totals = calculateCartTotals(cart);
 
   assert.equal(totals.tax, 0);
@@ -31,14 +31,30 @@ test('zero tax rate remains zero and does not fall back to 5%', async () => {
   assert.equal(totals.taxRate, 0);
 });
 
-test('tax rate 5% still adds the expected tax value', async () => {
-  const { calculateCartTotals } = await import('../js/cartStorage.js');
+test("tax rate 5% still adds the expected tax value", async () => {
+  const { calculateCartTotals } = await import("../js/cartStorage.js");
   const cart = [{ price: 1884, quantity: 1 }];
 
-  storage.set('bindaud_admin_state', JSON.stringify({ settings: { tax: 5 } }));
+  storage.set("bindaud_admin_state", JSON.stringify({ settings: { tax: 5 } }));
   const totals = calculateCartTotals(cart);
 
   assert.equal(totals.tax, 109.2);
   assert.equal(totals.grandTotal, 2293.2);
   assert.equal(totals.taxRate, 5);
+});
+
+test("website settings can disable tax for cart totals", async () => {
+  const { calculateCartTotals } = await import("../js/cartStorage.js");
+  const { saveWebsiteSettings } = await import("../js/adminStorage.js");
+  const cart = [{ price: 1884, quantity: 1 }];
+
+  globalThis.window.__BINDAUD_STORAGE__ = {};
+  globalThis.window.__BINDAUD_SITE_SETTINGS = { tax: 5 };
+
+  saveWebsiteSettings({ tax: 5, taxEnabled: false });
+  const totals = calculateCartTotals(cart);
+
+  assert.equal(totals.taxEnabled, false);
+  assert.equal(totals.tax, 0);
+  assert.equal(totals.grandTotal, 2184);
 });

@@ -10,6 +10,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "latest",
     "bcrypt": "latest",
     "cloudinary": "latest",
     "cors": "latest",

@@ -1,0 +1,28 @@
+# BIN DAUD Project Summary for AI Assistants
+
+## Overview
+BIN DAUD is a premium streetwear e-commerce storefront with a static frontend, an Express-style backend, and Supabase-backed persistence for orders and product metadata.
+
+## Key entry points
+- Frontend: index.html and pages/
+- Backend: backend/app.js and backend/routes/simpleAdminRoutes.js
+- Supabase schema: supabase/
+- Main frontend logic: js/
+
+## Core capabilities
+- Browse products and collections
+- Add items to cart and checkout
+- Manage orders through the admin flow
+- Persist orders and admin data via Supabase when configured
+
+## Important environment variables
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
+- SESSION_SECRET
+- CLIENT_URL
+- MONGODB_URI (optional legacy fallback)
+
+## Development notes
+- Keep changes backward-compatible for the storefront experience.
+- Prefer server-backed state for cart, orders, and admin flows.
+- Use the Supabase SQL files in supabase/ as the source of truth for database setup.

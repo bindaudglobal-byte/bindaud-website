@@ -1,34 +1,129 @@
-const CART_STORAGE_KEY = 'binDaudCart';
-const COUPON_STORAGE_KEY = 'binDaudCoupon';
+const CART_STORAGE_KEY = "binDaudCart";
+const COUPON_STORAGE_KEY = "binDaudCoupon";
+const TAX_SETTINGS_KEY = "bindaud_tax_settings";
+const TAX_ENABLED_KEY = "bindaud_tax_enabled";
+
+const getWindow = () => (typeof window === "undefined" ? null : window);
 
 const dispatchCartUpdated = () => {
-  if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent('cart:updated', { detail: getCart() }));
+  const win = getWindow();
+  if (!win) return;
+  win.dispatchEvent(new CustomEvent("cart:updated", { detail: getCart() }));
 };
 
-const readStorage = (key) => {
+const getCartState = () => {
+  const win = getWindow();
+  if (!win) return [];
+  if (!Array.isArray(win.__BINDAUD_CART)) {
+    win.__BINDAUD_CART = [];
+  }
+  return win.__BINDAUD_CART;
+};
+
+const setCartState = (cart) => {
+  const win = getWindow();
+  if (!win) return [];
+  win.__BINDAUD_CART = Array.isArray(cart) ? cart : [];
+  return win.__BINDAUD_CART;
+};
+
+const getApiBase = () => {
+  const win = getWindow();
+  if (win?.BINDAUD_CONFIG?.api?.adminBase) {
+    return win.BINDAUD_CONFIG.api.adminBase;
+  }
+  return "/api/admin";
+};
+
+const getAdminSettings = () => {
+  const win = getWindow();
+  if (!win) return null;
+
+  const directSettings = win.__BINDAUD_SITE_SETTINGS;
+  if (directSettings && typeof directSettings === "object") {
+    return directSettings;
+  }
+
+  const state =
+    win.__BINDAUD_STORAGE__?.bindaud_admin_state || win.__BINDAUD_ADMIN_STATE;
+  if (state?.settings && typeof state.settings === "object") {
+    return state.settings;
+  }
+
   try {
-    return JSON.parse(localStorage.getItem(key));
+    const persistedState =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("bindaud_admin_state")
+        : null;
+    if (persistedState) {
+      const parsedState = JSON.parse(persistedState);
+      if (parsedState?.settings && typeof parsedState.settings === "object") {
+        return parsedState.settings;
+      }
+    }
   } catch (error) {
-    return null;
+    console.warn("Unable to read admin settings from storage:", error.message);
+  }
+
+  return null;
+};
+
+const persistCartToServer = async (cart) => {
+  const win = getWindow();
+  if (!win) return;
+
+  try {
+    await fetch(`${getApiBase()}/cart`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cart }),
+    });
+  } catch (error) {
+    console.warn("Cart sync to backend failed:", error.message);
   }
 };
 
-const writeStorage = (key, value) => {
-  localStorage.setItem(key, JSON.stringify(value));
+export const hydrateCartFromServer = async () => {
+  const win = getWindow();
+  if (!win) return getCart();
+
+  try {
+    const response = await fetch(`${getApiBase()}/cart`, {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      const cart = Array.isArray(result?.data?.cart) ? result.data.cart : [];
+      setCartState(cart);
+      if (result?.data?.sessionId) {
+        win.__BINDAUD_CART_SESSION_ID = result.data.sessionId;
+      }
+      dispatchCartUpdated();
+    }
+  } catch (error) {
+    console.warn("Cart hydration from backend failed:", error.message);
+  }
+
+  return getCart();
 };
 
-export const getCart = () => readStorage(CART_STORAGE_KEY) || [];
+export const getCart = () => getCartState();
 
 export const saveCart = (cart) => {
-  writeStorage(CART_STORAGE_KEY, cart);
+  setCartState(cart);
   dispatchCartUpdated();
+  persistCartToServer(cart);
   return cart;
 };
 
-export const getCartCount = (cart = getCart()) => cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
+export const getCartCount = (cart = getCart()) =>
+  cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
 
-export const buildCartItemId = (product) => `${product.id}-${product.size}-${product.color}`;
+export const buildCartItemId = (product) =>
+  `${product.id}-${product.size}-${product.color}`;
 
 export const addToCart = (product) => {
   const cart = getCart();
@@ -53,7 +148,7 @@ export const addToCart = (product) => {
       rating: product.rating,
       reviews: product.reviews,
       stock: product.stock,
-      collection: product.collection
+      collection: product.collection,
     });
   }
 
@@ -80,94 +175,119 @@ export const removeCartItem = (cartItemId) => {
 
 export const setCoupon = (couponCode) => {
   const normalizedCoupon = couponCode.trim().toUpperCase();
-  const validCoupons = ['WELCOME10', 'BINDAUD5', 'FREESHIP'];
+  const validCoupons = ["WELCOME10", "BINDAUD5", "FREESHIP"];
+  const win = getWindow();
 
   if (!validCoupons.includes(normalizedCoupon)) {
-    localStorage.removeItem(COUPON_STORAGE_KEY);
-    return { valid: false, message: 'Invalid coupon code. Please try WELCOME10, BINDAUD5 or FREESHIP.' };
+    if (win) {
+      delete win[COUPON_STORAGE_KEY];
+    }
+    return {
+      valid: false,
+      message:
+        "Invalid coupon code. Please try WELCOME10, BINDAUD5 or FREESHIP.",
+    };
   }
 
-  localStorage.setItem(COUPON_STORAGE_KEY, normalizedCoupon);
-  return { valid: true, message: `Coupon ${normalizedCoupon} applied successfully.` };
+  if (win) {
+    win[COUPON_STORAGE_KEY] = normalizedCoupon;
+  }
+  return {
+    valid: true,
+    message: `Coupon ${normalizedCoupon} applied successfully.`,
+  };
 };
 
-export const getAppliedCoupon = () => localStorage.getItem(COUPON_STORAGE_KEY);
+export const getAppliedCoupon = () => {
+  const win = getWindow();
+  return win?.[COUPON_STORAGE_KEY] || null;
+};
 
 export const clearCoupon = () => {
-  localStorage.removeItem(COUPON_STORAGE_KEY);
+  const win = getWindow();
+  if (win) {
+    delete win[COUPON_STORAGE_KEY];
+  }
 };
 
 // Get tax rate from admin settings (default 5%)
-const getTaxRate = () => {
-  try {
-    const adminState = JSON.parse(localStorage.getItem('bindaud_admin_state') || '{}');
-    const adminSettings = adminState.settings || {};
-
-    if (Object.prototype.hasOwnProperty.call(adminSettings, 'tax')) {
-      const parsedTax = Number(adminSettings.tax);
-      if (!Number.isNaN(parsedTax)) {
-        return parsedTax;
-      }
-    }
-
-    if (adminSettings.taxEnabled === false) {
-      return 0;
-    }
-
-    const settings = JSON.parse(localStorage.getItem('bindaud_tax_settings') || '{}');
-    if (Object.prototype.hasOwnProperty.call(settings, 'taxRate')) {
-      const parsedTaxRate = Number(settings.taxRate);
-      if (!Number.isNaN(parsedTaxRate)) {
-        return parsedTaxRate;
-      }
-    }
-
-    return 5;
-  } catch {
-    return 5;
+const getTaxEnabled = () => {
+  const adminSettings = getAdminSettings() || {};
+  if (Object.prototype.hasOwnProperty.call(adminSettings, "taxEnabled")) {
+    return Boolean(adminSettings.taxEnabled);
   }
+
+  const win = getWindow();
+  if (!win) return true;
+
+  if (Object.prototype.hasOwnProperty.call(win, TAX_ENABLED_KEY)) {
+    return Boolean(win[TAX_ENABLED_KEY]);
+  }
+
+  return true;
+};
+
+const getTaxRate = () => {
+  const adminSettings = getAdminSettings() || {};
+  if (Object.prototype.hasOwnProperty.call(adminSettings, "tax")) {
+    const parsedTax = Number(adminSettings.tax);
+    if (!Number.isNaN(parsedTax)) {
+      return parsedTax;
+    }
+  }
+
+  const win = getWindow();
+  if (!win) return 5;
+
+  if (Object.prototype.hasOwnProperty.call(win, TAX_SETTINGS_KEY)) {
+    const parsedTax = Number(win[TAX_SETTINGS_KEY]);
+    if (!Number.isNaN(parsedTax)) {
+      return parsedTax;
+    }
+  }
+
+  return 5;
 };
 
 export const setTaxRate = (rate) => {
   const normalizedRate = Number(rate);
-  const settings = JSON.parse(localStorage.getItem('bindaud_tax_settings') || '{}');
-  settings.taxRate = Number.isNaN(normalizedRate) ? 5 : normalizedRate;
-  localStorage.setItem('bindaud_tax_settings', JSON.stringify(settings));
+  const win = getWindow();
+  if (!win) return;
 
-  try {
-    const adminState = JSON.parse(localStorage.getItem('bindaud_admin_state') || '{}');
-    if (adminState?.settings) {
-      adminState.settings.tax = settings.taxRate;
-      localStorage.setItem('bindaud_admin_state', JSON.stringify(adminState));
-    }
-  } catch {
-    // Ignore storage write issues and continue with the fallback.
-  }
+  win[TAX_SETTINGS_KEY] = Number.isNaN(normalizedRate) ? 5 : normalizedRate;
+  win.__BINDAUD_SITE_SETTINGS = {
+    ...(win.__BINDAUD_SITE_SETTINGS || {}),
+    tax: win[TAX_SETTINGS_KEY],
+  };
 };
 
 export const calculateCartTotals = (cart = getCart()) => {
-  const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  const subtotal = cart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0,
+  );
   const coupon = getAppliedCoupon();
+  const taxEnabled = getTaxEnabled();
   const taxRateValue = getTaxRate();
   const taxRate = taxRateValue / 100;
 
   let discountAmount = 0;
   let shipping = subtotal > 0 ? (subtotal >= 10000 ? 0 : 300) : 0;
 
-  if (coupon === 'WELCOME10') {
+  if (coupon === "WELCOME10") {
     discountAmount = subtotal * 0.1;
   }
 
-  if (coupon === 'BINDAUD5') {
+  if (coupon === "BINDAUD5") {
     discountAmount = subtotal * 0.05;
   }
 
-  if (coupon === 'FREESHIP') {
+  if (coupon === "FREESHIP") {
     shipping = 0;
   }
 
   const taxableBase = Math.max(0, subtotal - discountAmount + shipping);
-  const tax = taxRateValue > 0 ? taxableBase * taxRate : 0;
+  const tax = taxEnabled && taxRateValue > 0 ? taxableBase * taxRate : 0;
   const grandTotal = Math.max(0, taxableBase + tax);
 
   return {
@@ -177,6 +297,7 @@ export const calculateCartTotals = (cart = getCart()) => {
     tax,
     grandTotal,
     taxRate: getTaxRate(),
-    coupon
+    taxEnabled,
+    coupon,
   };
 };
