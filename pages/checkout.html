@@ -69,7 +69,7 @@
         <section class="section-hero-subtle">
             <div class="container text-center">
                 <h1 class="section-title">Checkout</h1>
-                <p class="section-lead">Review your order and send your request to WhatsApp for a premium concierge experience.</p>
+                <p class="section-lead">Review your order and place it directly on our site with email confirmation and order tracking.</p>
             </div>
         </section>
 
@@ -80,7 +80,7 @@
                         <div class="checkout-panel">
                             <div class="checkout-panel-header">
                                 <h2 class="summary-title">Customer Information</h2>
-                                <p class="section-lead small">We’ll prepare your order request and send it directly to our team.</p>
+                                <p class="section-lead small">We’ll save your order securely and confirm it by email as soon as it’s received.</p>
                             </div>
                             <form id="checkout-form" class="checkout-form" novalidate>
                                 <div class="form-row">
@@ -128,6 +128,38 @@
                                     </label>
                                 </div>
 
+                                <div class="form-row">
+                                    <label class="form-field" for="checkout-billing-name">
+                                        <span>Billing Name</span>
+                                        <input id="checkout-billing-name" name="billingName" type="text" placeholder="Same as full name">
+                                    </label>
+                                    <label class="form-field" for="checkout-billing-city">
+                                        <span>Billing City</span>
+                                        <input id="checkout-billing-city" name="billingCity" type="text" placeholder="Karachi">
+                                    </label>
+                                </div>
+
+                                <div class="form-row">
+                                    <label class="form-field" for="checkout-billing-address">
+                                        <span>Billing Address</span>
+                                        <input id="checkout-billing-address" name="billingAddress" type="text" placeholder="House, street, area">
+                                    </label>
+                                    <label class="form-field" for="checkout-billing-postal-code">
+                                        <span>Billing Postal Code</span>
+                                        <input id="checkout-billing-postal-code" name="billingPostalCode" type="text" placeholder="75000">
+                                    </label>
+                                </div>
+
+                                <label class="form-field" for="checkout-billing-province">
+                                    <span>Billing Province</span>
+                                    <input id="checkout-billing-province" name="billingProvince" type="text" placeholder="Sindh">
+                                </label>
+
+                                <label class="form-field full-width" for="checkout-payment-proof">
+                                    <span>Payment Proof (optional)</span>
+                                    <input id="checkout-payment-proof" name="paymentProof" type="file" accept="image/*" />
+                                </label>
+
                                 <label class="form-field full-width" for="checkout-notes">
                                     <span>Order Notes</span>
                                     <textarea id="checkout-notes" name="notes" rows="3" placeholder="Any special requests, gifting details, or delivery preferences"></textarea>
@@ -163,7 +195,7 @@
                         <div class="checkout-panel">
                             <div class="checkout-panel-header">
                                 <h2 class="summary-title">Order Preview</h2>
-                                <p class="section-lead small">Your request will be shared in a beautifully formatted WhatsApp message.</p>
+                                <p class="section-lead small">Your order will be saved on-site and confirmed by email with a live order reference.</p>
                             </div>
                             <div id="checkout-preview" class="checkout-preview"></div>
                         </div>
@@ -206,9 +238,9 @@
                         <div class="summary-actions">
                             <button id="whatsapp-submit" class="btn btn-primary btn-full whatsapp-btn" type="button">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M19.1 4.9A9.4 9.4 0 0 0 4.9 19.1L3 21l1.9-1.9A9.4 9.4 0 1 0 19.1 4.9ZM12 19.4a7.3 7.3 0 0 1-3.7-1l-.3-.2-1.2.3 1.3-1.2-.2-.3a7.3 7.3 0 1 1 3.1 2.4Z"></path>
+                                    <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm7 4a1 1 0 0 0-1 1v5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1zm0 9a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path>
                                 </svg>
-                                Place Order via WhatsApp
+                                Place Order
                             </button>
                             <a href="cart.html" class="btn btn-ghost btn-full">Return to Cart</a>
                         </div>
@@ -220,8 +252,8 @@
 
     <div id="checkout-confirmation-modal" class="checkout-confirmation-modal" role="dialog" aria-modal="true" aria-labelledby="confirmation-title" hidden>
         <div class="checkout-confirmation-card">
-            <h3 id="confirmation-title">Order Sent Successfully?</h3>
-            <p>We opened WhatsApp for your order request. Was your message sent successfully?</p>
+            <h3 id="confirmation-title">Order Placed Successfully?</h3>
+            <p>Your order has been received and a confirmation email is being prepared. Continue to the thank-you page?</p>
             <div class="summary-actions">
                 <button type="button" class="btn btn-primary" id="confirm-order-yes">Yes</button>
                 <button type="button" class="btn btn-ghost" id="confirm-order-no">No</button>
@@ -268,10 +300,6 @@
         </div>
     </footer>
 
-    <script src="../js/config.js"></script>
-    <script type="module" src="../js/app.js"></script>
-<script src="../js/config.js"></script>
-<script type="module" src="../js/app.js"></script>
     <script src="../js/config.js"></script>
     <script type="module" src="../js/app.js"></script>
 </body>

@@ -27,10 +27,16 @@ const uploadFields = upload.fields([
 
 const {
   isSupabaseEnabled,
+  getSupabaseClient,
   createOrder: createSupabaseOrder,
   getOrders: getSupabaseOrders,
   updateOrderStatus: updateSupabaseOrderStatus,
 } = require("../services/supabaseService");
+const {
+  sendOrderConfirmation,
+  sendOrderStatusUpdate,
+  sendAdminNotification,
+} = require("../services/emailService");
 
 const cartSessions = new Map();
 
@@ -206,8 +212,9 @@ const normalizeOrderForResponse = (order) => {
 
 const ensureOrderCustomer = async (payload) => {
   const Customer = require("../models/Customer");
-  const normalizedEmail = payload.email
-    ? String(payload.email).trim().toLowerCase()
+  const safePayload = payload && typeof payload === "object" ? payload : {};
+  const normalizedEmail = safePayload.email
+    ? String(safePayload.email).trim().toLowerCase()
     : "";
   let customer = null;
 
@@ -218,17 +225,17 @@ const ensureOrderCustomer = async (payload) => {
   if (!customer) {
     customer = await Customer.create({
       name:
-        String(payload.customerName || "Guest Customer").trim() ||
+        String(safePayload.customerName || "Guest Customer").trim() ||
         "Guest Customer",
       email: normalizedEmail || `guest+${Date.now()}@example.com`,
-      phone: String(payload.phone || "").trim(),
+      phone: String(safePayload.phone || "").trim(),
       password: `Guest!${Date.now()}`,
       address: {
-        street: String(payload.address || "").trim(),
-        city: String(payload.city || "").trim(),
-        province: String(payload.province || "").trim(),
+        street: String(safePayload.address || "").trim(),
+        city: String(safePayload.city || "").trim(),
+        province: String(safePayload.province || "").trim(),
         country: "Pakistan",
-        postalCode: String(payload.postalCode || "").trim(),
+        postalCode: String(safePayload.postalCode || "").trim(),
       },
     });
   }
@@ -600,36 +607,145 @@ router.get("/orders/customer", async (req, res) => {
   }
 });
 
-// PUBLIC: POST /api/admin/orders - Create order from customer checkout (WhatsApp)
-router.post("/orders", async (req, res) => {
+// PUBLIC: POST /api/admin/orders - Create order from customer checkout
+router.post("/orders", upload.single("paymentProof"), async (req, res) => {
   try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const rawProducts = body.products;
+    let parsedProducts = [];
+
+    if (Array.isArray(rawProducts)) {
+      parsedProducts = rawProducts;
+    } else if (typeof rawProducts === "string") {
+      try {
+        parsedProducts = JSON.parse(rawProducts);
+      } catch (error) {
+        parsedProducts = [];
+      }
+    }
+
+    const paymentMethod = body.paymentMethod || "Cash on Delivery";
+    const orderNumber =
+      body.orderNumber || `ORD-${Date.now().toString().slice(-6)}`;
+    const status = body.status || body.orderStatus || "Payment Pending";
+    const paymentStatus =
+      body.paymentStatus ||
+      (paymentMethod === "Cash on Delivery" ? "cod" : "pending");
+    const trackingNumber =
+      body.trackingNumber ||
+      `BD-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+
     const orderPayload = {
-      customerName: req.body.customerName || "Guest",
-      email: req.body.email || "",
-      phone: req.body.phone || "",
-      address: req.body.address || "",
-      city: req.body.city || "",
-      province: req.body.province || "",
-      postalCode: req.body.postalCode || "",
-      notes: req.body.notes || "",
-      products: Array.isArray(req.body.products) ? req.body.products : [],
-      subtotal: Number(req.body.subtotal) || 0,
-      discount: Number(req.body.discount) || 0,
-      shipping: Number(req.body.shipping) || 0,
-      tax: Number(req.body.tax) || 0,
-      total: Number(req.body.total) || 0,
-      paymentMethod: req.body.paymentMethod || "Cash on Delivery",
-      status: req.body.status || req.body.orderStatus || "Pending",
-      paymentStatus: req.body.paymentStatus || "unpaid",
-      createdAt: req.body.createdAt || new Date().toISOString(),
-      updatedAt: req.body.updatedAt || new Date().toISOString(),
-      orderNumber:
-        req.body.orderNumber || `ORD-${Date.now().toString().slice(-6)}`,
+      customerName: body.customerName || "Guest",
+      email: body.email || "",
+      phone: body.phone || "",
+      address: body.address || "",
+      city: body.city || "",
+      province: body.province || "",
+      postalCode: body.postalCode || "",
+      notes: body.notes || "",
+      products: Array.isArray(parsedProducts) ? parsedProducts : [],
+      subtotal: Number(body.subtotal) || 0,
+      discount: Number(body.discount) || 0,
+      shipping: Number(body.shipping) || 0,
+      tax: Number(body.tax) || 0,
+      total: Number(body.total) || 0,
+      paymentMethod,
+      status,
+      paymentStatus,
+      createdAt: body.createdAt || new Date().toISOString(),
+      updatedAt: body.updatedAt || new Date().toISOString(),
+      orderNumber,
+      trackingNumber,
+      metadata: {
+        billingAddress: {
+          fullName: body.billingName || body.customerName || "",
+          address: body.billingAddress || "",
+          city: body.billingCity || "",
+          province: body.billingProvince || "",
+          postalCode: body.billingPostalCode || "",
+        },
+        shippingAddress: {
+          fullName: body.customerName || "",
+          address: body.address || "",
+          city: body.city || "",
+          province: body.province || "",
+          postalCode: body.postalCode || "",
+        },
+      },
     };
 
     let savedOrder;
+    let paymentProofUrl = "";
+
+    if (req.file && paymentMethod !== "Cash on Delivery") {
+      try {
+        const client = getSupabaseClient();
+        const fileName = `${orderPayload.orderNumber}-${Date.now()}-${req.file.originalname || "payment-proof"}`;
+        const uploadPath = `payment-proofs/${fileName}`;
+        const { data, error } = await client.storage
+          .from("bindaud-assets")
+          .upload(uploadPath, req.file.buffer, {
+            contentType: req.file.mimetype,
+            upsert: true,
+          });
+
+        if (!error && data?.path) {
+          paymentProofUrl = `${process.env.SUPABASE_URL || ""}/storage/v1/object/public/bindaud-assets/${data.path}`;
+          orderPayload.metadata.paymentProofUrl = paymentProofUrl;
+          orderPayload.paymentProofUrl = paymentProofUrl;
+        }
+      } catch (uploadError) {
+        console.warn("Payment proof upload skipped:", uploadError.message);
+      }
+    }
+
     if (isSupabaseEnabled()) {
-      savedOrder = await createSupabaseOrder(orderPayload);
+      try {
+        savedOrder = await createSupabaseOrder(orderPayload);
+      } catch (supabaseError) {
+        console.warn(
+          "Supabase order persistence failed, falling back to MongoDB:",
+          supabaseError.message,
+        );
+        const Order = require("../models/Order");
+        const customerId = await ensureOrderCustomer(orderPayload);
+        const order = new Order({
+          orderNumber: orderPayload.orderNumber,
+          customer: customerId,
+          phone: orderPayload.phone,
+          email: orderPayload.email,
+          shippingAddress: {
+            street: orderPayload.address,
+            city: orderPayload.city,
+            province: orderPayload.province,
+            country: "Pakistan",
+            postalCode: orderPayload.postalCode,
+          },
+          products: orderPayload.products.map((item) => ({
+            product: item.id || null,
+            name: item.name || "",
+            price: Number(item.price) || 0,
+            salePrice: Number(item.salePrice) || Number(item.price) || 0,
+            quantity: Number(item.quantity) || 1,
+            size: item.size || "",
+            color: item.color || "",
+            image: item.image || "",
+          })),
+          subtotal: orderPayload.subtotal,
+          shippingCost: orderPayload.shipping,
+          discount: orderPayload.discount,
+          total: orderPayload.total,
+          paymentMethod: orderPayload.paymentMethod,
+          paymentStatus: orderPayload.paymentStatus,
+          orderStatus: orderPayload.status,
+          notes: orderPayload.notes,
+          trackingNumber: orderPayload.trackingNumber,
+          date: new Date(orderPayload.createdAt),
+        });
+
+        savedOrder = await order.save();
+      }
     } else {
       const Order = require("../models/Order");
       const customerId = await ensureOrderCustomer(orderPayload);
@@ -663,14 +779,13 @@ router.post("/orders", async (req, res) => {
         paymentStatus: orderPayload.paymentStatus,
         orderStatus: orderPayload.status,
         notes: orderPayload.notes,
-        trackingNumber: "",
+        trackingNumber: orderPayload.trackingNumber,
         date: new Date(orderPayload.createdAt),
       });
 
       savedOrder = await order.save();
     }
 
-    const { sendOrderConfirmation } = require("../services/emailService");
     if (orderPayload.email) {
       try {
         await sendOrderConfirmation(savedOrder);
@@ -682,15 +797,33 @@ router.post("/orders", async (req, res) => {
       }
     }
 
+    if (orderPayload.email && paymentProofUrl) {
+      try {
+        await sendAdminNotification({
+          email: process.env.ADMIN_EMAIL || "hello@bindaud.com",
+          subject: `Payment proof received for ${orderPayload.orderNumber}`,
+          message: `A payment proof upload was attached to order ${orderPayload.orderNumber}. Please verify it in the admin dashboard.`,
+        });
+      } catch (notificationError) {
+        console.warn("Admin notification failed:", notificationError.message);
+      }
+    }
+
+    const responseOrder = savedOrder?.toObject
+      ? normalizeOrderForResponse(savedOrder)
+      : savedOrder;
+
     res.status(201).json({
       success: true,
-      data: savedOrder,
+      data: responseOrder,
       message: "Order created successfully",
     });
   } catch (error) {
+    console.error("Order creation failed:", error);
     res.status(500).json({
       success: false,
       message: `Failed to create order: ${error.message}`,
+      stack: process.env.NODE_ENV !== "production" ? error.stack : undefined,
     });
   }
 });
@@ -771,15 +904,13 @@ router.put("/orders/:id", async (req, res) => {
         .json({ success: false, message: "Order not found" });
     }
 
-    if (
-      (status === "shipped" ||
-        status === "Delivered" ||
-        status === "delivered") &&
-      order.email
-    ) {
+    if (order?.email && typeof status === "string" && status.trim()) {
       try {
-        const { sendShippingUpdate } = require("../services/emailService");
-        await sendShippingUpdate(order);
+        const normalizedStatus = status.trim();
+        const statusLabel = normalizedStatus.replace(/^./, (char) =>
+          char.toUpperCase(),
+        );
+        await sendOrderStatusUpdate(order, statusLabel);
       } catch (emailError) {
         console.warn("Email send failed:", emailError.message);
       }

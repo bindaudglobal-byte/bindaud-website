@@ -869,6 +869,14 @@ const getCheckoutCustomerData = (form) => ({
   address: select("#checkout-address", form)?.value?.trim() || "",
   postalCode: select("#checkout-postal-code", form)?.value?.trim() || "",
   province: select("#checkout-province", form)?.value?.trim() || "",
+  billingName: select("#checkout-billing-name", form)?.value?.trim() || "",
+  billingAddress:
+    select("#checkout-billing-address", form)?.value?.trim() || "",
+  billingCity: select("#checkout-billing-city", form)?.value?.trim() || "",
+  billingProvince:
+    select("#checkout-billing-province", form)?.value?.trim() || "",
+  billingPostalCode:
+    select("#checkout-billing-postal-code", form)?.value?.trim() || "",
   notes: select("#checkout-notes", form)?.value?.trim() || "",
   paymentMethod:
     select('input[name="paymentMethod"]:checked', form)?.value ||
@@ -1102,61 +1110,134 @@ export const initCheckoutPage = () => {
       return;
     }
 
-    const customerData = getCheckoutCustomerData(form);
-    const totals = calculateCartTotals(cart);
-    const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
-    const orderPayload = {
-      id: `ORD-${Date.now()}`,
-      orderNumber,
-      customerName: customerData.fullName,
-      phone: customerData.phone,
-      email: customerData.email,
-      address: customerData.address,
-      city: customerData.city,
-      postalCode: customerData.postalCode,
-      province: customerData.province,
-      notes: customerData.notes,
-      products: cart.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        code: item.code,
-        size: item.size,
-        color: item.color,
-        image: item.image || "",
-      })),
-      subtotal: totals.subtotal,
-      discount: totals.discountAmount,
-      shipping: totals.shipping,
-      tax: totals.tax,
-      total: totals.grandTotal,
-      paymentMethod: customerData.paymentMethod,
-      status: "Pending",
-      paymentStatus: "unpaid",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    submitButton?.setAttribute("disabled", "true");
+    submitButton?.setAttribute("data-loading", "true");
+    if (submitButton) submitButton.textContent = "Placing order...";
 
-    const backendOrder = await createOrderAsync(orderPayload);
-    await queueOrderEmail(customerData, orderPayload, totals);
+    try {
+      const customerData = getCheckoutCustomerData(form);
+      const totals = calculateCartTotals(cart);
+      const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+      const paymentFile =
+        select("#checkout-payment-proof", form)?.files?.[0] || null;
+      const orderPayload = {
+        id: `ORD-${Date.now()}`,
+        orderNumber,
+        customerName: customerData.fullName,
+        phone: customerData.phone,
+        email: customerData.email,
+        address: customerData.address,
+        city: customerData.city,
+        postalCode: customerData.postalCode,
+        province: customerData.province,
+        notes: customerData.notes,
+        products: cart.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          code: item.code,
+          size: item.size,
+          color: item.color,
+          image: item.image || "",
+        })),
+        subtotal: totals.subtotal,
+        discount: totals.discountAmount,
+        shipping: totals.shipping,
+        tax: totals.tax,
+        total: totals.grandTotal,
+        paymentMethod: customerData.paymentMethod,
+        status: "Payment Pending",
+        paymentStatus:
+          customerData.paymentMethod === "Cash on Delivery" ? "cod" : "pending",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        billingName: customerData.billingName,
+        billingAddress: customerData.billingAddress,
+        billingCity: customerData.billingCity,
+        billingProvince: customerData.billingProvince,
+        billingPostalCode: customerData.billingPostalCode,
+      };
 
-    if (backendOrder?.id) {
-      showToast(
-        "Order saved to persistent storage and confirmation email is queued.",
+      const formData = new FormData();
+      formData.append("customerName", customerData.fullName);
+      formData.append("phone", customerData.phone);
+      formData.append("email", customerData.email);
+      formData.append("address", customerData.address);
+      formData.append("city", customerData.city);
+      formData.append("postalCode", customerData.postalCode);
+      formData.append("province", customerData.province);
+      formData.append(
+        "billingName",
+        customerData.billingName || customerData.fullName,
       );
-    } else {
-      showToast(
-        "Order queued locally while offline. It will sync once the connection is restored.",
+      formData.append(
+        "billingAddress",
+        customerData.billingAddress || customerData.address,
       );
-    }
+      formData.append(
+        "billingCity",
+        customerData.billingCity || customerData.city,
+      );
+      formData.append(
+        "billingProvince",
+        customerData.billingProvince || customerData.province,
+      );
+      formData.append(
+        "billingPostalCode",
+        customerData.billingPostalCode || customerData.postalCode,
+      );
+      formData.append("notes", customerData.notes);
+      formData.append("products", JSON.stringify(orderPayload.products));
+      formData.append("subtotal", String(totals.subtotal));
+      formData.append("discount", String(totals.discountAmount));
+      formData.append("shipping", String(totals.shipping));
+      formData.append("tax", String(totals.tax));
+      formData.append("total", String(totals.grandTotal));
+      formData.append("paymentMethod", customerData.paymentMethod);
+      formData.append("status", "Payment Pending");
+      formData.append(
+        "paymentStatus",
+        customerData.paymentMethod === "Cash on Delivery" ? "cod" : "pending",
+      );
+      formData.append("createdAt", orderPayload.createdAt);
+      formData.append("updatedAt", orderPayload.updatedAt);
+      formData.append("orderNumber", orderPayload.orderNumber);
+      if (paymentFile) {
+        formData.append("paymentProof", paymentFile);
+      }
 
-    // Send WhatsApp message
-    const whatsappMessage = buildWhatsAppMessage(customerData, cart, totals);
-    const whatsappUrl = `https://wa.me/923288582902?text=${encodeURIComponent(whatsappMessage)}`;
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+      const backendOrder = await createOrderAsync(formData);
+      await queueOrderEmail(customerData, orderPayload, totals);
 
-    if (confirmationModal) {
-      confirmationModal.hidden = false;
+      saveCart([]);
+      clearCoupon();
+      updateCartBadge();
+
+      if (backendOrder?.orderNumber || backendOrder?.id) {
+        showToast(
+          "Order placed successfully. A confirmation email is on the way.",
+        );
+        window.location.href = resolveSitePath(
+          `thank-you.html?order=${encodeURIComponent(backendOrder.orderNumber || orderNumber)}`,
+        );
+      } else {
+        showToast(
+          "Order queued locally while offline. It will sync once the connection is restored.",
+        );
+      }
+
+      if (confirmationModal) {
+        confirmationModal.hidden = false;
+      }
+    } catch (error) {
+      console.error("Checkout submission failed", error);
+      showToast(
+        "We could not place your order right now. Please try again shortly.",
+      );
+    } finally {
+      submitButton?.removeAttribute("disabled");
+      submitButton?.removeAttribute("data-loading");
+      if (submitButton) submitButton.textContent = "Place Order";
     }
   };
 

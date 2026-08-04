@@ -28,6 +28,28 @@ const normalizeSupabaseOrder = (order) => {
     return order;
   }
 
+  const metadata =
+    order.metadata && typeof order.metadata === "object" ? order.metadata : {};
+
+  const customerName =
+    order.customerName ||
+    order.customer_name ||
+    metadata.customerName ||
+    metadata.customer_name ||
+    "Guest Customer";
+  const email = order.email || metadata.email || order.guest_email || "";
+  const phone = order.phone || metadata.phone || "";
+  const address = order.address || metadata.address || "";
+  const city = order.city || metadata.city || "";
+  const province = order.province || metadata.province || "";
+  const postalCode =
+    order.postalCode || order.postal_code || metadata.postalCode || "";
+  const products = Array.isArray(order.products)
+    ? order.products
+    : Array.isArray(metadata.products)
+      ? metadata.products
+      : [];
+
   return {
     id:
       order.id ||
@@ -39,45 +61,92 @@ const normalizeSupabaseOrder = (order) => {
       order.order_number ||
       order.id ||
       `ORD-${Date.now().toString().slice(-6)}`,
-    customerName: order.customerName || order.customer_name || "Guest Customer",
-    email: order.email || "",
-    phone: order.phone || "",
-    address: order.address || "",
-    city: order.city || "",
-    province: order.province || "",
-    postalCode: order.postalCode || order.postal_code || "",
-    notes: order.notes || "",
-    products: Array.isArray(order.products) ? order.products : [],
+    customerName,
+    email,
+    phone,
+    address,
+    city,
+    province,
+    postalCode,
+    notes: order.notes || metadata.notes || "",
+    products,
     subtotal: Number(order.subtotal) || 0,
     discount: Number(order.discount) || 0,
     shipping: Number(order.shipping) || 0,
     tax: Number(order.tax) || 0,
     total: Number(order.total) || 0,
     paymentMethod:
-      order.paymentMethod || order.payment_method || "Cash on Delivery",
+      order.paymentMethod ||
+      order.payment_method ||
+      metadata.paymentMethod ||
+      "Cash on Delivery",
     status:
-      order.status || order.order_status || order.orderStatus || "Pending",
-    paymentStatus: order.paymentStatus || order.payment_status || "pending",
-    trackingNumber: order.trackingNumber || order.tracking_number || "",
-    createdAt: order.createdAt || order.created_at || new Date().toISOString(),
-    updatedAt: order.updatedAt || order.updated_at || new Date().toISOString(),
+      order.status ||
+      order.order_status ||
+      metadata.status ||
+      "Payment Pending",
+    paymentStatus:
+      order.paymentStatus ||
+      order.payment_status ||
+      metadata.paymentStatus ||
+      "pending",
+    trackingNumber:
+      order.trackingNumber ||
+      order.tracking_number ||
+      metadata.trackingNumber ||
+      "",
+    createdAt:
+      order.createdAt ||
+      order.created_at ||
+      metadata.createdAt ||
+      new Date().toISOString(),
+    updatedAt:
+      order.updatedAt ||
+      order.updated_at ||
+      metadata.updatedAt ||
+      new Date().toISOString(),
+    paymentProofUrl: metadata.paymentProofUrl || "",
   };
 };
 
 const buildSupabaseOrderPayload = (order) => {
   const normalized = normalizeSupabaseOrder(order);
-  return {
-    id: normalized.id,
-    order_number: normalized.orderNumber,
-    customer_name: normalized.customerName,
+  const metadata = {
+    customerName: normalized.customerName,
     email: normalized.email,
     phone: normalized.phone,
     address: normalized.address,
     city: normalized.city,
     province: normalized.province,
-    postal_code: normalized.postalCode,
+    postalCode: normalized.postalCode,
     notes: normalized.notes,
+    paymentMethod: normalized.paymentMethod,
+    paymentStatus: normalized.paymentStatus,
     products: normalized.products,
+    shippingAddress: {
+      street: normalized.address,
+      city: normalized.city,
+      province: normalized.province,
+      postalCode: normalized.postalCode,
+    },
+    trackingNumber: normalized.trackingNumber,
+    createdAt: normalized.createdAt,
+    updatedAt: normalized.updatedAt,
+    ...(order.metadata || {}),
+  };
+
+  return {
+    id: normalized.id,
+    order_number: normalized.orderNumber,
+    customer_name: normalized.customerName,
+    email: normalized.email || null,
+    phone: normalized.phone || null,
+    address: normalized.address || null,
+    city: normalized.city || null,
+    province: normalized.province || null,
+    postal_code: normalized.postalCode || null,
+    notes: normalized.notes || null,
+    products: normalized.products || [],
     subtotal: normalized.subtotal,
     discount: normalized.discount,
     shipping: normalized.shipping,
@@ -86,7 +155,7 @@ const buildSupabaseOrderPayload = (order) => {
     payment_method: normalized.paymentMethod,
     status: normalized.status,
     payment_status: normalized.paymentStatus,
-    tracking_number: normalized.trackingNumber,
+    tracking_number: normalized.trackingNumber || null,
     created_at: normalized.createdAt,
     updated_at: normalized.updatedAt,
   };
@@ -100,6 +169,7 @@ const createOrder = async (orderData) => {
   }
 
   const payload = buildSupabaseOrderPayload(orderData);
+  console.log("Supabase payload:", JSON.stringify(payload, null, 2));
   const { data, error } = await client.from("orders").insert(payload).single();
 
   if (error) {

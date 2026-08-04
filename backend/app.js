@@ -44,6 +44,8 @@ app.set("trust proxy", 1);
 app.use(helmet());
 const allowedOrigins = [
   getClientUrl(),
+  "http://127.0.0.1:3000",
+  "http://localhost:3000",
   "http://127.0.0.1:8080",
   "http://localhost:8080",
 ];
@@ -51,11 +53,26 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) {
         callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+        return;
       }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(
+        origin,
+      );
+
+      if (isLocalOrigin) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   }),

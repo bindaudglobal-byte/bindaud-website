@@ -287,7 +287,10 @@ export const calculateCartTotals = (cart = getCart()) => {
   }
 
   const taxableBase = Math.max(0, subtotal - discountAmount + shipping);
-  const tax = taxEnabled && taxRateValue > 0 ? taxableBase * taxRate : 0;
+  const tax =
+    taxEnabled && taxRateValue > 0
+      ? (subtotal - discountAmount + shipping) * taxRate
+      : 0;
   const grandTotal = Math.max(0, taxableBase + tax);
 
   return {

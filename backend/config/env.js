@@ -52,6 +52,12 @@ const getSupabaseServiceRoleKey = () =>
   getEnv("SUPABASE_SERVICE_ROLE_KEY") || getEnv("SUPABASE_SERVICE_ROLE") || "";
 const getPort = () => getNumber("PORT", 5000);
 
+const getSmtpHost = () => getEnv("SMTP_HOST") || "";
+const getSmtpPort = () => getNumber("SMTP_PORT", 0);
+const getSmtpUser = () => getEnv("SMTP_USER") || "";
+const getSmtpPass = () => getEnv("SMTP_PASS") || "";
+const getSmtpSecure = () => getBoolean("SMTP_SECURE", false);
+
 module.exports = {
   getEnv,
   getNumber,
@@ -65,4 +71,9 @@ module.exports = {
   getSupabaseUrl,
   getSupabaseServiceRoleKey,
   getPort,
+  getSmtpHost,
+  getSmtpPort,
+  getSmtpUser,
+  getSmtpPass,
+  getSmtpSecure,
 };

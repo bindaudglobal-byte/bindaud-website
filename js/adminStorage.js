@@ -173,8 +173,11 @@ const requestAdminApi = async (path, options = {}) => {
     throw new Error("Admin API is only available in the browser.");
   }
 
+  const isFormDataPayload =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormDataPayload ? {} : { "Content-Type": "application/json" }),
     ...(options.headers || {}),
   };
 
@@ -604,16 +607,19 @@ export const createOrder = (orderData) => {
 export const createOrderAsync = async (orderData) => {
   const payload = {
     ...orderData,
-    status: orderData.status || orderData.orderStatus || "Pending",
-    paymentStatus: orderData.paymentStatus || "unpaid",
+    status: orderData.status || orderData.orderStatus || "Payment Pending",
+    paymentStatus: orderData.paymentStatus || "pending",
     createdAt: orderData.createdAt || new Date().toISOString(),
     updatedAt: orderData.updatedAt || new Date().toISOString(),
   };
 
   try {
+    const body =
+      orderData instanceof FormData ? orderData : JSON.stringify(payload);
+
     const result = await requestAdminApi("/orders", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body,
     });
 
     if (result.success && result.data) {
@@ -635,7 +641,7 @@ export const createOrderAsync = async (orderData) => {
   throw new Error("Supabase is not configured for order storage.");
 };
 
-export const updateOrderStatus = async (orderId, status) => {
+export const updateOrderStatus = async (orderId, status, paymentStatus) => {
   const state = getAdminState();
   const order = state.orders.find((item) => item.id === orderId);
 

@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const customerSchema = new mongoose.Schema(
   {
@@ -17,7 +17,7 @@ const customerSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      default: '',
+      default: "",
     },
     password: {
       type: String,
@@ -25,15 +25,15 @@ const customerSchema = new mongoose.Schema(
       minlength: 8,
     },
     address: {
-      street: { type: String, default: '' },
-      city: { type: String, default: '' },
-      province: { type: String, default: '' },
-      country: { type: String, default: '' },
-      postalCode: { type: String, default: '' },
+      street: { type: String, default: "" },
+      city: { type: String, default: "" },
+      province: { type: String, default: "" },
+      country: { type: String, default: "" },
+      postalCode: { type: String, default: "" },
     },
     cartItems: [
       {
-        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
         name: String,
         price: Number,
         salePrice: Number,
@@ -43,9 +43,9 @@ const customerSchema = new mongoose.Schema(
         image: String,
       },
     ],
-    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Wishlist' }],
-    orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
-    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Wishlist" }],
+    orders: [{ type: mongoose.Schema.Types.ObjectId, ref: "Order" }],
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
     isActive: {
       type: Boolean,
       default: true,
@@ -61,16 +61,15 @@ const customerSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-customerSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    return next();
+customerSchema.pre("save", async function () {
+  if (!this.isModified("password")) {
+    return;
   }
 
   this.password = await bcrypt.hash(this.password, 12);
-  next();
 });
 
 customerSchema.methods.matchPassword = async function (enteredPassword) {
@@ -85,4 +84,4 @@ customerSchema.methods.toPublicJSON = function () {
   return obj;
 };
 
-module.exports = mongoose.model('Customer', customerSchema);
+module.exports = mongoose.model("Customer", customerSchema);
