@@ -1,0 +1,13 @@
+var R=require("../../../chunks/ssr/[turbopack]_runtime.js")("server/app/auth/register/page.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0-6c_yf._.js")
+R.c("server/chunks/ssr/0rp3_next_dist_120u81c._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__1u7wutu._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__1o6_i98._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0lfh6nh._.js")
+R.c("server/chunks/ssr/0rp3_next_dist_client_components_0e3nko_._.js")
+R.c("server/chunks/ssr/0rp3_next_dist_client_components_builtin_forbidden_03g06f8.js")
+R.c("server/chunks/ssr/0rp3_next_dist_client_components_builtin_unauthorized_0xxfy6d.js")
+R.c("server/chunks/ssr/0rp3_next_dist_client_components_builtin_global-error_1mfswq2.js")
+R.c("server/chunks/ssr/customer-platform__next-internal_server_app_auth_register_page_actions_0igq1sf.js")
+R.m(2522)
+module.exports=R.m(2522).exports

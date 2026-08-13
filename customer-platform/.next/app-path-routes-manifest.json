@@ -1,0 +1,19 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/cart/route": "/api/cart",
+  "/api/checkout/route": "/api/checkout",
+  "/auth/change-password/page": "/auth/change-password",
+  "/auth/forgot-password/page": "/auth/forgot-password",
+  "/auth/login/page": "/auth/login",
+  "/auth/logout/page": "/auth/logout",
+  "/auth/register/page": "/auth/register",
+  "/auth/reset-password/page": "/auth/reset-password",
+  "/auth/verify-email/page": "/auth/verify-email",
+  "/cart/page": "/cart",
+  "/checkout/page": "/checkout",
+  "/dashboard/[section]/page": "/dashboard/[section]",
+  "/dashboard/page": "/dashboard",
+  "/favicon.ico/route": "/favicon.ico",
+  "/page": "/"
+}

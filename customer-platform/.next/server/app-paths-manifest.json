@@ -1,0 +1,19 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/cart/route": "app/api/cart/route.js",
+  "/api/checkout/route": "app/api/checkout/route.js",
+  "/auth/change-password/page": "app/auth/change-password/page.js",
+  "/auth/forgot-password/page": "app/auth/forgot-password/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/logout/page": "app/auth/logout/page.js",
+  "/auth/register/page": "app/auth/register/page.js",
+  "/auth/reset-password/page": "app/auth/reset-password/page.js",
+  "/auth/verify-email/page": "app/auth/verify-email/page.js",
+  "/cart/page": "app/cart/page.js",
+  "/checkout/page": "app/checkout/page.js",
+  "/dashboard/[section]/page": "app/dashboard/[section]/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js"
+}
