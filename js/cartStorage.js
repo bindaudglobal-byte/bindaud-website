@@ -14,16 +14,46 @@ const dispatchCartUpdated = () => {
 const getCartState = () => {
   const win = getWindow();
   if (!win) return [];
-  if (!Array.isArray(win.__BINDAUD_CART)) {
-    win.__BINDAUD_CART = [];
+  if (Array.isArray(win.__BINDAUD_CART)) {
+    return win.__BINDAUD_CART;
   }
+
+  // Try to restore from localStorage as a fallback
+  try {
+    const raw =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem(CART_STORAGE_KEY)
+        : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        win.__BINDAUD_CART = parsed;
+        return win.__BINDAUD_CART;
+      }
+    }
+  } catch (err) {
+    // ignore parse errors
+  }
+
+  win.__BINDAUD_CART = [];
   return win.__BINDAUD_CART;
 };
 
 const setCartState = (cart) => {
   const win = getWindow();
   if (!win) return [];
-  win.__BINDAUD_CART = Array.isArray(cart) ? cart : [];
+  const normalized = Array.isArray(cart) ? cart : [];
+  win.__BINDAUD_CART = normalized;
+
+  // Persist to localStorage as a robust fallback when server sync fails
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(normalized));
+    }
+  } catch (err) {
+    // ignore storage errors
+  }
+
   return win.__BINDAUD_CART;
 };
 
@@ -96,8 +126,47 @@ export const hydrateCartFromServer = async () => {
 
     if (response.ok) {
       const result = await response.json();
-      const cart = Array.isArray(result?.data?.cart) ? result.data.cart : [];
-      setCartState(cart);
+      const serverCart = Array.isArray(result?.data?.cart)
+        ? result.data.cart
+        : [];
+
+      // Merge local cart (guest) into server cart when appropriate
+      let merged = serverCart.slice();
+      try {
+        const raw =
+          typeof localStorage !== "undefined"
+            ? localStorage.getItem(CART_STORAGE_KEY)
+            : null;
+        const localCart = raw ? JSON.parse(raw) : null;
+        if (Array.isArray(localCart) && localCart.length > 0) {
+          // If server cart is empty, prefer local cart and push to server
+          if (merged.length === 0) {
+            merged = localCart.slice();
+            // Attempt to persist merged cart to server
+            try {
+              await persistCartToServer(merged);
+            } catch (err) {
+              // ignore server persist errors
+            }
+          } else {
+            // Merge unique items by cartItemId
+            const existingIds = new Set(merged.map((i) => i.cartItemId));
+            for (const item of localCart) {
+              if (!existingIds.has(item.cartItemId)) merged.push(item);
+            }
+            // Try to persist merged cart
+            try {
+              await persistCartToServer(merged);
+            } catch (err) {
+              // ignore
+            }
+          }
+        }
+      } catch (err) {
+        // ignore local parse errors
+      }
+
+      setCartState(merged);
       if (result?.data?.sessionId) {
         win.__BINDAUD_CART_SESSION_ID = result.data.sessionId;
       }
