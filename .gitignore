@@ -16,3 +16,5 @@ assets/images/Premium streetwear T-shirt graphic for BIN DAUD, bold illustration
 .env.*.local
 /backend/.env
 /backend/.env.local
+
+supabase/.temp
