@@ -21,8 +21,8 @@ window.BINDAUD_CONFIG = {
     // Supabase project URL (configured from your project ID)
     supabaseUrl: "https://tkggzqoyeldymegwrhax.supabase.co",
     // Supabase anon key (client-side)
-    supabaseAnonKey:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrZ2d6cW95ZWxkeW1lZ3dyaGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNDY1MTAsImV4cCI6MjEwMDcyMjUxMH0.Q2UowWNPX1X3eCJ5p3vcigs2UEPHNWbr15P1CZmVNgI",
+    supabaseAnonKey: "", // DO NOT hardcode in source for production.
+    // Configure this value at build/deploy time (e.g. Vercel NEXT_PUBLIC_SUPABASE_ANON_KEY)
     // Example: 'https://your-supabase-project-url.supabase.co'
     googleSheetsEndpoint: "",
     // Example: 'https://script.google.com/macros/s/your-script-id/exec'

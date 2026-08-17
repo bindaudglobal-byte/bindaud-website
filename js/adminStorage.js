@@ -629,16 +629,12 @@ export const createOrderAsync = async (orderData) => {
     console.warn("Backend order save failed:", error.message);
   }
 
-  if (isSupabaseEnabled()) {
-    try {
-      return await createSupabaseOrder(payload);
-    } catch (error) {
-      console.warn("Supabase order save failed.", error.message);
-      throw error;
-    }
-  }
-
-  throw new Error("Supabase is not configured for order storage.");
+  // Do NOT perform client-side Supabase writes from the browser.
+  // Orders must be created by the backend using the SUPABASE_SERVICE_ROLE_KEY.
+  // Surface a clear error so the server configuration issue is visible.
+  throw new Error(
+    "Order creation failed on the server. Please contact support or try again later.",
+  );
 };
 
 export const updateOrderStatus = async (orderId, status, paymentStatus) => {

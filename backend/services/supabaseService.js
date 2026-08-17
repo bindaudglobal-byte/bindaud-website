@@ -169,14 +169,60 @@ const createOrder = async (orderData) => {
   }
 
   const payload = buildSupabaseOrderPayload(orderData);
-  console.log("Supabase payload:", JSON.stringify(payload, null, 2));
-  const { data, error } = await client.from("orders").insert(payload).single();
+  // Enforce tax = 0 for new orders
+  payload.tax = 0;
 
-  if (error) {
-    throw error;
+  // Insert order first
+  console.log("Supabase order payload:", JSON.stringify(payload, null, 2));
+  const { data: orderRow, error: orderError } = await client
+    .from("orders")
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (orderError) {
+    throw orderError;
   }
 
-  return normalizeSupabaseOrder(data);
+  const orderId = orderRow?.id || orderRow?.order_number || null;
+
+  // Insert order items (if any) into `order_items` table
+  const items = Array.isArray(orderData.products)
+    ? orderData.products
+    : payload.products || [];
+  if (items.length) {
+    const itemRows = items.map((p) => ({
+      order_id: orderRow.id,
+      product_id: p.id || null,
+      name: p.name || null,
+      price: Number(p.price) || 0,
+      sale_price: Number(p.salePrice || p.sale_price) || 0,
+      quantity: Number(p.quantity) || 1,
+      size: p.size || null,
+      color: p.color || null,
+      image: p.image || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { error: itemsError } = await client
+      .from("order_items")
+      .insert(itemRows);
+    if (itemsError) {
+      // Attempt to cleanup the created order to avoid partial state
+      try {
+        await client.from("orders").delete().eq("id", orderRow.id);
+      } catch (cleanupErr) {
+        console.warn(
+          "Failed to cleanup order after item insert failure:",
+          cleanupErr.message,
+        );
+      }
+      throw itemsError;
+    }
+  }
+
+  return normalizeSupabaseOrder(orderRow);
 };
 
 const getOrders = async (query = "") => {

@@ -700,91 +700,16 @@ router.post("/orders", upload.single("paymentProof"), async (req, res) => {
       }
     }
 
-    if (isSupabaseEnabled()) {
-      try {
-        savedOrder = await createSupabaseOrder(orderPayload);
-      } catch (supabaseError) {
-        console.warn(
-          "Supabase order persistence failed, falling back to MongoDB:",
-          supabaseError.message,
-        );
-        const Order = require("../models/Order");
-        const customerId = await ensureOrderCustomer(orderPayload);
-        const order = new Order({
-          orderNumber: orderPayload.orderNumber,
-          customer: customerId,
-          phone: orderPayload.phone,
-          email: orderPayload.email,
-          shippingAddress: {
-            street: orderPayload.address,
-            city: orderPayload.city,
-            province: orderPayload.province,
-            country: "Pakistan",
-            postalCode: orderPayload.postalCode,
-          },
-          products: orderPayload.products.map((item) => ({
-            product: item.id || null,
-            name: item.name || "",
-            price: Number(item.price) || 0,
-            salePrice: Number(item.salePrice) || Number(item.price) || 0,
-            quantity: Number(item.quantity) || 1,
-            size: item.size || "",
-            color: item.color || "",
-            image: item.image || "",
-          })),
-          subtotal: orderPayload.subtotal,
-          shippingCost: orderPayload.shipping,
-          discount: orderPayload.discount,
-          total: orderPayload.total,
-          paymentMethod: orderPayload.paymentMethod,
-          paymentStatus: orderPayload.paymentStatus,
-          orderStatus: orderPayload.status,
-          notes: orderPayload.notes,
-          trackingNumber: orderPayload.trackingNumber,
-          date: new Date(orderPayload.createdAt),
-        });
-
-        savedOrder = await order.save();
-      }
-    } else {
-      const Order = require("../models/Order");
-      const customerId = await ensureOrderCustomer(orderPayload);
-      const order = new Order({
-        orderNumber: orderPayload.orderNumber,
-        customer: customerId,
-        phone: orderPayload.phone,
-        email: orderPayload.email,
-        shippingAddress: {
-          street: orderPayload.address,
-          city: orderPayload.city,
-          province: orderPayload.province,
-          country: "Pakistan",
-          postalCode: orderPayload.postalCode,
-        },
-        products: orderPayload.products.map((item) => ({
-          product: item.id || null,
-          name: item.name || "",
-          price: Number(item.price) || 0,
-          salePrice: Number(item.salePrice) || Number(item.price) || 0,
-          quantity: Number(item.quantity) || 1,
-          size: item.size || "",
-          color: item.color || "",
-          image: item.image || "",
-        })),
-        subtotal: orderPayload.subtotal,
-        shippingCost: orderPayload.shipping,
-        discount: orderPayload.discount,
-        total: orderPayload.total,
-        paymentMethod: orderPayload.paymentMethod,
-        paymentStatus: orderPayload.paymentStatus,
-        orderStatus: orderPayload.status,
-        notes: orderPayload.notes,
-        trackingNumber: orderPayload.trackingNumber,
-        date: new Date(orderPayload.createdAt),
+    if (!isSupabaseEnabled()) {
+      return res.status(500).json({
+        success: false,
+        message:
+          "Supabase is not configured for order persistence. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
       });
-
-      savedOrder = await order.save();
     }
+
+    // Persist order to Supabase (orders + order_items)
+    savedOrder = await createSupabaseOrder(orderPayload);
 
     if (orderPayload.email) {
       try {
