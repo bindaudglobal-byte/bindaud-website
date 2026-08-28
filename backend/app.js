@@ -43,7 +43,7 @@ const mountGetRoute = (route, handler) => {
 app.set("trust proxy", 1);
 app.use(helmet());
 const allowedOrigins = [
-  getClientUrl(),
+  ...require("./config/env").getClientUrls(),
   "http://127.0.0.1:3000",
   "http://localhost:3000",
   "http://127.0.0.1:8080",

@@ -44,6 +44,13 @@ const getRateLimitWindowMs = () =>
   getNumber("RATE_LIMIT_WINDOW_MS", 15 * 60 * 1000);
 const getJwtSecret = () => getEnv("JWT_SECRET") || "super-secret";
 const getClientUrl = () => getEnv("CLIENT_URL") || "http://localhost:3000";
+const getClientUrls = () => {
+  const raw = getEnv("CLIENT_URLS");
+  if (raw) {
+    return raw.split(",").map(s => s.trim()).filter(Boolean);
+  }
+  return [getClientUrl()];
+};
 const getMongoUri = () =>
   getEnv("MONGODB_URI") || "mongodb://127.0.0.1:27017/bindaud";
 const getSupabaseUrl = () =>
@@ -67,6 +74,7 @@ module.exports = {
   getRateLimitWindowMs,
   getJwtSecret,
   getClientUrl,
+  getClientUrls,
   getMongoUri,
   getSupabaseUrl,
   getSupabaseServiceRoleKey,
